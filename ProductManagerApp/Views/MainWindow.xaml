@@ -11,53 +11,10 @@
         <!-- 顶部输入区域 -->
         <StackPanel Orientation="Horizontal" Margin="0 0 0 10">
 
-            <!-- 商品名称输入框，带灰色默认提示 -->
-            <TextBox x:Name="txtName" Width="150" Margin="0,0,5,0">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Foreground" Value="Gray"/>
-                        <Setter Property="Text" Value="请输入商品名称"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Text" Value=""/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
-
-            <!-- 商品价格输入框 -->
-            <TextBox x:Name="txtPrice" Width="100" Margin="0,0,5,0">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Foreground" Value="Gray"/>
-                        <Setter Property="Text" Value="请输入价格"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Text" Value=""/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
-
-            <!-- 商品库存输入框 -->
-            <TextBox x:Name="txtStock" Width="80" Margin="0,0,5,0">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Foreground" Value="Gray"/>
-                        <Setter Property="Text" Value="请输入库存"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Text" Value=""/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+             <!--商品名称输入框，带灰色默认提示-->
+            <TextBox x:Name="txtName" Width="150" Margin="0,0,5,0" />
+            <TextBox x:Name="txtPrice" Width="100" Margin="0,0,5,0"/>
+            <TextBox x:Name="txtStock" Width="80" Margin="0,0,5,0" />
 
             <!-- 按钮 -->
             <Button Content="添加" Width="80" Click="BtnAdd_Click" Margin="5,0"/>
