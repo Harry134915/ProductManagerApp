@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "6smC/F7CJiU=",
+  "success": true,
+  "projectFilePath": "D:\\workspace\\MyPractice\\ProductManagerApp\\ProductManagerApp\\ProductManagerApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\进钱吧.LAPTOP-QL45H0DH\\.nuget\\packages\\stub.system.data.sqlite.core.netstandard\\1.0.118\\stub.system.data.sqlite.core.netstandard.1.0.118.nupkg.sha512",
+    "C:\\Users\\进钱吧.LAPTOP-QL45H0DH\\.nuget\\packages\\system.data.sqlite.core\\1.0.118\\system.data.sqlite.core.1.0.118.nupkg.sha512"
+  ],
+  "logs": []
+}
