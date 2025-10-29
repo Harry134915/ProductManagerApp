@@ -12,6 +12,7 @@ namespace ProductManagerApp.BLL
     internal class ProductsBLL : IProductsBLL
     {
         private IProductsDAO m_productDAO;
+
         public ProductsBLL()
         {
             m_productDAO = new ProductsSqliteDAO();
@@ -32,20 +33,27 @@ namespace ProductManagerApp.BLL
             m_productDAO.AddProduct(product);
         }
 
-        public void UpdateProductPrice(Product product, double newPrice)
+        public void UpdateProductPrice(int productId, double newPrice)
         {
-            product.Price = newPrice;
+            var product = m_productDAO.GetProductById(productId);
+            if (product == null)
+            {
+                return;
+            }
 
+            product.Price = newPrice;
+            //TODO:如果我想要有一个更新指定字段的方法.
             m_productDAO.UpdateProduct(product);
         }
 
         public void UpdateProduct(Product product)
         {
-
+            throw new NotImplementedException();
         }
 
         public void DeleteProduct(int productId)
         {
+            throw new NotImplementedException();
         }
     }
 }

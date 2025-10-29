@@ -11,10 +11,15 @@ namespace ProductManagerApp.BLL
     public interface IProductsBLL
     {
         void AddProduct(Product product);
+
         void DeleteProduct(int productId);
+
         List<Product> GetAllProducts();
+
         DataTable QueryProducts();
+
         void UpdateProduct(Product product);
-        void UpdateProductPrice(Product product, double newPrice);
+
+        void UpdateProductPrice(int productId, double newPrice);
     }
 }
