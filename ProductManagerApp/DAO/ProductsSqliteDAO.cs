@@ -71,5 +71,21 @@ namespace ProductManagerApp.DAO
             };
             return DatabaseHelper.Execute(sql, parameters.ToArray());
         }
+
+        public int UpdateProductPrice(int productId, double newPrice)
+        {
+            string sql = "UPDATE products SET price=@price WHERE id=@id";
+            SQLiteParameter[] parameters =
+            {
+                new SQLiteParameter("@price", newPrice),
+                new SQLiteParameter("@id", productId)
+            };
+            return DatabaseHelper.Execute(sql, parameters.ToArray());
+        }
+
+        public Product GetProductById(int productId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

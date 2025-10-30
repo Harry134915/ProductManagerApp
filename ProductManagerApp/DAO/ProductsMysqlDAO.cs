@@ -71,5 +71,10 @@ namespace ProductManagerApp.DAO
             };
             return DatabaseHelper.Execute(sql, parameters.ToArray());
         }
+
+        public Product GetProductById(int productId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
