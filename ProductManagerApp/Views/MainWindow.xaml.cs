@@ -15,7 +15,7 @@ namespace ProductManagerApp.Views
         public MainWindow()
         {
             InitializeComponent();
-            m_productsBLL = new ProductsBLLNew();
+            m_productsBLL = new ProductsBLL();
             LoadProducts();
         }
 
@@ -40,11 +40,9 @@ namespace ProductManagerApp.Views
             string sql = "INSERT INTO products (name,price,stock) VALUES (@name, @price, @stock)";
             SQLiteParameter[] parameters =
             {
-                
                 new SQLiteParameter("@name", name),
                 new SQLiteParameter("@price", price),
                 new SQLiteParameter("@stock", stock),
-              
             };
 
             DatabaseHelper.Execute(sql, parameters);
