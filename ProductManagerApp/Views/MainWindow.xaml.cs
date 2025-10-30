@@ -36,13 +36,16 @@ namespace ProductManagerApp.Views
 
             double.TryParse(txtPrice.Text, out double price);
             int.TryParse(txtStock.Text, out int stock);
+            string description = txtDescription.Text.Trim();
 
-            string sql = "INSERT INTO products (name,price,stock) VALUES (@name, @price, @stock)";
+            string sql = "INSERT INTO products (name,price,stock,description) VALUES (@name, @price, @stock,@description)";
             SQLiteParameter[] parameters =
             {
                 new SQLiteParameter("@name", name),
                 new SQLiteParameter("@price", price),
                 new SQLiteParameter("@stock", stock),
+                new SQLiteParameter("@description", description),
+
             };
 
             DatabaseHelper.Execute(sql, parameters);
