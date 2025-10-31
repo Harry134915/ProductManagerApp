@@ -37,6 +37,7 @@ namespace ProductManagerApp.Views
 
             double.TryParse(txtPrice.Text, out double price);
             int.TryParse(txtStock.Text, out int stock);
+            string description = txtDescription.Text.Trim();
 
             var product = new Product
             {

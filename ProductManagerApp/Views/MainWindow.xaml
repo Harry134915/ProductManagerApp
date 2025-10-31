@@ -64,6 +64,19 @@
                    Visibility="{Binding Text.IsEmpty, ElementName=txtStock, Converter={StaticResource BoolToVisibilityConverter}}"/>
             </Grid>
 
+            <Grid Margin="0,0,5,0">
+                <TextBox x:Name="txtDescription"
+                Width="80"
+                Padding="5"
+                VerticalContentAlignment="Center"/>        
+                <TextBlock Text="请输入描述"
+                 Foreground="Gray"
+                 Margin="8,0,0,0"
+                 VerticalAlignment="Center"
+                 IsHitTestVisible="False"
+                 Visibility="{Binding Text.IsEmpty, ElementName=txtDescription, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </Grid>
+
             <!-- 按钮 -->
             <Button Content="添加" Width="80" Click="BtnAdd_Click" Margin="5,0"/>
             <Button Content="刷新" Width="80" Click="BtnRefresh_Click" Margin="5,0"/>
@@ -72,7 +85,7 @@
         <!-- 数据表格显示商品列表 -->
         <DataGrid x:Name="dataGrid"
                   Grid.Row="1"
-                  AutoGenerateColumns="True"
+                  AutoGenerateColumns="True" 
                   IsReadOnly="True"
                   SelectionMode="Single"
                   Margin="0,10,0,0"/>
