@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductManagerApp.DAO
+namespace ProductManagerApp.DAL
 {
     /// <summary>
     /// 产品数据访问对象接口，定义了产品相关的数据操作方法。
     /// </summary>
-    public interface IProductsDAO
+    public interface IProductsDAL
     {
         /// <summary>
         /// 添加一个新产品。

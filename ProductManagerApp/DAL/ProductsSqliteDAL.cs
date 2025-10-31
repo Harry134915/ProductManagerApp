@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductManagerApp.DAO
+namespace ProductManagerApp.DAL
 {
-    internal class ProductsSqliteDAO : IProductsDAO
+    internal class ProductsSqliteDAL : IProductsDAL
     {
         /// <summary>
         /// 查询商品列表
