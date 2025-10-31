@@ -1,5 +1,5 @@
 ﻿using ProductManagerApp.BLL;
-using ProductManagerApp.DAO;
+using ProductManagerApp.DAL;
 using ProductManagerApp.Data;
 using ProductManagerApp.Models;
 using System.Data;
@@ -22,6 +22,7 @@ namespace ProductManagerApp.Views
         private void LoadProducts()
         {
             var productDataTable = m_productsBLL.QueryProducts();
+            //TODO: 改为不使用 DataTable 方式, 而是直接绑定 List<Product>
             dataGrid.ItemsSource = productDataTable.DefaultView;
         }
 
@@ -38,17 +39,15 @@ namespace ProductManagerApp.Views
             int.TryParse(txtStock.Text, out int stock);
             string description = txtDescription.Text.Trim();
 
-            string sql = "INSERT INTO products (name,price,stock,description) VALUES (@name, @price, @stock,@description)";
-            SQLiteParameter[] parameters =
+            var product = new Product
             {
-                new SQLiteParameter("@name", name),
-                new SQLiteParameter("@price", price),
-                new SQLiteParameter("@stock", stock),
-                new SQLiteParameter("@description", description),
-
+                Name = name,
+                Price = price,
+                Stock = stock
             };
 
-            DatabaseHelper.Execute(sql, parameters);
+            m_productsBLL.AddProduct(product);
+
             MessageBox.Show("添加成功！");
             LoadProducts();
         }

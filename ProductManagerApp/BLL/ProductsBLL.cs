@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.DAO;
+﻿using ProductManagerApp.DAL;
 using ProductManagerApp.Models;
 using System;
 using System.Collections.Generic;
@@ -11,11 +11,11 @@ namespace ProductManagerApp.BLL
 {
     internal class ProductsBLL : IProductsBLL
     {
-        private IProductsDAO m_productDAO;
+        private IProductsDAL m_productDAO;
 
         public ProductsBLL()
         {
-            m_productDAO = new ProductsSqliteDAO();
+            m_productDAO = new ProductsSqliteDAL();
         }
 
         public DataTable QueryProducts()
