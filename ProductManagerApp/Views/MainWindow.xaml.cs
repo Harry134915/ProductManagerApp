@@ -43,7 +43,8 @@ namespace ProductManagerApp.Views
             {
                 Name = name,
                 Price = price,
-                Stock = stock
+                Stock = stock,
+                Description = description
             };
 
             m_productsBLL.AddProduct(product);

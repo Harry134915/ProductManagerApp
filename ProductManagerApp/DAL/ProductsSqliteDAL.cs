@@ -47,7 +47,7 @@ namespace ProductManagerApp.DAL
         /// <returns></returns>
         public int AddProduct(Product product)
         {
-            string sql = "INSERT INTO products (name, price, stock) VALUES (@name, @price, @stock)";
+            string sql = "INSERT INTO products (name, price, stock,description) VALUES (@name, @price, @stock,@description)";
             SQLiteParameter[] parameters =
             {
                 new SQLiteParameter("@name", product.Name),
