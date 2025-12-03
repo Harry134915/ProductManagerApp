@@ -10,7 +10,7 @@ namespace ProductManagerApp.Views
             InitializeComponent();
 
             // 设置 ViewModel 为 DataContext
-            DataContext = new MainWindowViewModel();
+            //DataContext = new MainWindowViewModel();
         }
     }
 }

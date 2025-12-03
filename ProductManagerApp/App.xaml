@@ -1,7 +1,15 @@
 ﻿<Application x:Class="ProductManagerApp.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="Views/MainWindow.xaml">
+             >
     <Application.Resources/>
 </Application>
 
+<!-- App.xaml:    App.xaml 是 WPF 的全局资源中心
+    1.可统一放置全局样式、模板、主题、字体配置 
+    2.全局引用 ResourceDictionary（主题/样式拆分）
+    3.注册全局的 Converter、Behavior、DataTemplate
+    4.定义全局的 DataTemplate
+    5.App.xaml 决定了应用的生命周期
+    例如当应用启动、关闭、异常时，事件都在 App.xaml.cs：
+    -->
