@@ -13,6 +13,7 @@ namespace ProductManagerApp.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+
         public MainWindowViewModel()
         {
             _productsBLL = new ProductsBLL();
