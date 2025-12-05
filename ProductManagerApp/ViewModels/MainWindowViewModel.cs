@@ -72,6 +72,8 @@ namespace ProductManagerApp.ViewModels
         {
             Products.Clear();
 
+            //数据库 → DAL → BLL → List<Product>
+
             var dt = _productsBLL.QueryProducts();
 
             foreach (System.Data.DataRow row in dt.Rows)
