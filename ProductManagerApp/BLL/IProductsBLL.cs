@@ -10,14 +10,16 @@ namespace ProductManagerApp.BLL
 {
     public interface IProductsBLL
     {
-        void AddProduct(Product product);
-
-        void DeleteProduct(int productId);
-
+        //查询
         List<Product> GetAllProducts();
 
-        DataTable QueryProducts();
+        //新增
+        void AddProduct(Product product);
 
+        //删除
+        void DeleteProduct(int productId);
+
+        //更新
         void UpdateProduct(Product product);
 
         void UpdateProductPrice(int productId, double newPrice);

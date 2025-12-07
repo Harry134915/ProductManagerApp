@@ -8,13 +8,17 @@ namespace ProductManagerApp.Data
         //private static readonly string connStr = @"Data Source=D:\workspace\MyPractice\ProductManagerApp\ProductManagerApp\database.db;Version=3;";
         private static readonly string connStr = @"Data Source=database.db;Version=3;";
 
-
-
-        public static DataTable Query(string sql)
+        // 新增：支持参数化查询
+        public static DataTable Query(string sql, params SQLiteParameter[] parameters)
         {
             using var conn = new SQLiteConnection(connStr);
             conn.Open();
-            using var da = new SQLiteDataAdapter(sql, conn);
+
+            using var cmd = new SQLiteCommand(sql, conn);
+            if (parameters != null)
+                cmd.Parameters.AddRange(parameters);
+
+            using var da = new SQLiteDataAdapter(cmd);
             var dt = new DataTable();
             da.Fill(dt);
             return dt;

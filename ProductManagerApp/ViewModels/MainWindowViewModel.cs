@@ -32,29 +32,29 @@ namespace ProductManagerApp.ViewModels
         // 绑定到 UI 的属性
         // ============================================================
 
-        private string _name;
-        public string Name
+        private string? _name;
+        public string? Name
         {
             get => _name;
             set { _name = value; OnPropertyChanged(); }
         }
 
-        private string _price;
-        public string Price
+        private string? _price;
+        public string? Price
         {
             get => _price;
             set { _price = value; OnPropertyChanged(); }
         }
 
-        private string _stock;
-        public string Stock
+        private string? _stock;
+        public string? Stock
         {
             get => _stock;
             set { _stock = value; OnPropertyChanged(); }
         }
 
-        private string _description;
-        public string Description
+        private string? _description;
+        public string? Description
         {
             get => _description;
             set { _description = value; OnPropertyChanged(); }
@@ -65,7 +65,7 @@ namespace ProductManagerApp.ViewModels
 
 
         // ============================================================
-        // 加载商品
+        // 加载商品（只拿Product）
         // ============================================================
 
         private void LoadProducts()
@@ -74,18 +74,11 @@ namespace ProductManagerApp.ViewModels
 
             //数据库 → DAL → BLL → List<Product>
 
-            var dt = _productsBLL.QueryProducts();
+            var list = _productsBLL.GetAllProducts();
 
-            foreach (System.Data.DataRow row in dt.Rows)
+            foreach (var product in list)
             {
-                Products.Add(new Product
-                {
-                    Id = row["Id"] is System.DBNull ? 0 : (int)(long)row["Id"],
-                    Name = row["Name"].ToString(),
-                    Price = row["Price"] is System.DBNull ? 0 : (double)row["Price"],
-                    Stock = row["Stock"] is System.DBNull ? 0 : (int)(long)row["Stock"],
-                    Description = row["Description"]?.ToString()
-                });
+                Products.Add(product);
             }
         }
 
@@ -109,7 +102,7 @@ namespace ProductManagerApp.ViewModels
                 Name = Name.Trim(),
                 Price = price,
                 Stock = stock,
-                Description = Description?.Trim()
+                Description = Description.Trim()
             };
 
             _productsBLL.AddProduct(product);
@@ -164,5 +157,3 @@ namespace ProductManagerApp.ViewModels
         }
     }
 }
-
-

@@ -13,19 +13,7 @@ namespace ProductManagerApp.DAL
     /// </summary>
     public interface IProductsDAL
     {
-        /// <summary>
-        /// 添加一个新产品。
-        /// </summary>
-        /// <param name="product">要添加的产品对象。</param>
-        /// <returns>受影响的行数。</returns>
-        int AddProduct(Product product);
-
-        /// <summary>
-        /// 获取所有产品的列表。
-        /// </summary>
-        /// <returns>产品列表。</returns>
-        List<Product> GetAllProducts();
-
+        //查询
         /// <summary>
         /// 查询所有产品并以 DataTable 形式返回。
         /// </summary>
@@ -37,13 +25,27 @@ namespace ProductManagerApp.DAL
         /// </summary>
         /// <param name="productId">产品ID。</param>
         /// <returns>对应的产品对象。</returns>
-        Product GetProductById(int productId);
+        DataTable QueryProductById(int productId);
 
+        //新增
+        /// <summary>
+        /// 添加一个新产品。
+        /// </summary>
+        /// <param name="product">要添加的产品对象。</param>
+        /// <returns>受影响的行数。</returns>
+        int AddProduct(DataRow productRow);
+
+        //更新
         /// <summary>
         /// 更新产品信息。
         /// </summary>
         /// <param name="product">要更新的产品对象。</param>
         /// <returns>受影响的行数。</returns>
-        int UpdateProduct(Product product);
+        int UpdateProduct(DataRow productRow);
+
+        int UpdateProductPrice(int productId, double newPrice);
+
+        //删除
+        int DeleteProduct(int productId);
     }
 }

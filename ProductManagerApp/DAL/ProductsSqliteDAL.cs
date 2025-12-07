@@ -21,23 +21,17 @@ namespace ProductManagerApp.DAL
             return DatabaseHelper.Query("SELECT * FROM products");
         }
 
-        public List<Product> GetAllProducts()
+        /// <summary>
+        /// 根据 Id 查询单个商品
+        /// </summary>
+        public DataTable QueryProductById(int productId)
         {
-            var dt = DatabaseHelper.Query("SELECT * FROM products");
-            var products = new List<Product>();
-            foreach (DataRow row in dt.Rows)
+            string sql = "SELECT * FROM products WHERE id = @id";
+            SQLiteParameter[] parameters =
             {
-                var product = new Product
-                {
-                    Id = Convert.ToInt32(row["id"]),
-                    Name = row["name"].ToString(),
-                    Price = Convert.ToDouble(row["price"]),
-                    Stock = Convert.ToInt32(row["stock"]),
-                    Description = row["description"].ToString()
-                };
-                products.Add(product);
-            }
-            return products;
+                new SQLiteParameter("@id",productId)
+            };
+            return DatabaseHelper.Query(sql, parameters);
         }
 
         /// <summary>
@@ -45,31 +39,31 @@ namespace ProductManagerApp.DAL
         /// </summary>
         /// <param name="product"></param>
         /// <returns></returns>
-        public int AddProduct(Product product)
+        public int AddProduct(DataRow row)
         {
             string sql = "INSERT INTO products (name, price, stock,description) VALUES (@name, @price, @stock,@description)";
             SQLiteParameter[] parameters =
             {
-                new SQLiteParameter("@name", product.Name),
-                new SQLiteParameter("@price", product.Price),
-                new SQLiteParameter("@stock", product.Stock),
-                new SQLiteParameter("@description", product.Description)
+                new SQLiteParameter("@name", row["Name"]),
+                new SQLiteParameter("@price", row["Price"]),
+                new SQLiteParameter("@stock", row["stock"]),
+                new SQLiteParameter("@description",row["description"] )
             };
-            return DatabaseHelper.Execute(sql, parameters.ToArray());
+            return DatabaseHelper.Execute(sql, parameters);
         }
 
-        public int UpdateProduct(Product product)
+        public int UpdateProduct(DataRow row)
         {
             string sql = "UPDATE products SET name=@name, price=@price, stock=@stock, description=@description WHERE id=@id";
             SQLiteParameter[] parameters =
             {
-                new SQLiteParameter("@name", product.Name),
-                new SQLiteParameter("@price", product.Price),
-                new SQLiteParameter("@stock", product.Stock),
-                new SQLiteParameter("@description", product.Description),
-                new SQLiteParameter("@id", product.Id)
+                new SQLiteParameter("@name", row["Name"]),
+                new SQLiteParameter("@price", row["Price"]),
+                new SQLiteParameter("@stock", row["stock"]),
+                new SQLiteParameter("@description", row["description"]),
+                new SQLiteParameter("@id", row["id"])
             };
-            return DatabaseHelper.Execute(sql, parameters.ToArray());
+            return DatabaseHelper.Execute(sql, parameters);
         }
 
         public int UpdateProductPrice(int productId, double newPrice)
@@ -80,12 +74,22 @@ namespace ProductManagerApp.DAL
                 new SQLiteParameter("@price", newPrice),
                 new SQLiteParameter("@id", productId)
             };
-            return DatabaseHelper.Execute(sql, parameters.ToArray());
+            return DatabaseHelper.Execute(sql, parameters);
         }
 
-        public Product GetProductById(int productId)
+        /// <summary>
+        /// 删除商品
+        /// </summary>
+        public int DeleteProduct(int productId)
         {
-            throw new NotImplementedException();
+            string sql = "DELETE FROM products WHERE id=@id";
+            SQLiteParameter[] parameters =
+            {
+                new SQLiteParameter("@id", productId)
+            };
+            return DatabaseHelper.Execute(sql, parameters);
         }
+
+
     }
 }
