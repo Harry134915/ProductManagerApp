@@ -1,95 +1,136 @@
-﻿using ProductManagerApp.Data;
-using ProductManagerApp.Models;
+﻿using ProductManagerApp.Models;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SQLite;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProductManagerApp.DAL
 {
     internal class ProductsSqliteDAL : IProductsDAL
     {
-        /// <summary>
-        /// 查询商品列表
-        /// </summary>
-        /// <returns></returns>
-        public DataTable QueryProducts()
+        // =======================================================
+        // 查询全部
+        // =======================================================
+        public List<Product> GetAllProducts()
         {
-            return DatabaseHelper.Query("SELECT * FROM products");
-        }
+            string sql = "SELECT id, name, price, stock, description FROM products";
+            List<Product> list = new List<Product>();
 
-        /// <summary>
-        /// 根据 Id 查询单个商品
-        /// </summary>
-        public DataTable QueryProductById(int productId)
-        {
-            string sql = "SELECT * FROM products WHERE id = @id";
-            SQLiteParameter[] parameters =
+            var dt = DatabaseHelper.Query(sql);
+
+            if (dt == null) return list;
+
+            foreach (System.Data.DataRow row in dt.Rows)
             {
-                new SQLiteParameter("@id",productId)
-            };
-            return DatabaseHelper.Query(sql, parameters);
+                list.Add(MapToProduct(row));
+            }
+
+            return list;
         }
 
-        /// <summary>
-        /// 添加商品
-        /// </summary>
-        /// <param name="product"></param>
-        /// <returns></returns>
-        public int AddProduct(DataRow row)
+
+        // =======================================================
+        // 查询单个
+        // =======================================================
+        public Product? GetProductById(int id)
         {
-            string sql = "INSERT INTO products (name, price, stock,description) VALUES (@name, @price, @stock,@description)";
-            SQLiteParameter[] parameters =
-            {
-                new SQLiteParameter("@name", row["Name"]),
-                new SQLiteParameter("@price", row["Price"]),
-                new SQLiteParameter("@stock", row["stock"]),
-                new SQLiteParameter("@description",row["description"] )
-            };
-            return DatabaseHelper.Execute(sql, parameters);
+            string sql = "SELECT id, name, price, stock, description FROM products WHERE id=@id";
+
+            var dt = DatabaseHelper.Query(sql, new SQLiteParameter("@id", id));
+
+            if (dt == null || dt.Rows.Count == 0)
+                return null;
+
+            return MapToProduct(dt.Rows[0]);
         }
 
-        public int UpdateProduct(DataRow row)
+
+        // =======================================================
+        // 新增
+        // =======================================================
+        public int AddProduct(Product product)
         {
-            string sql = "UPDATE products SET name=@name, price=@price, stock=@stock, description=@description WHERE id=@id";
-            SQLiteParameter[] parameters =
+            string sql = @"
+                INSERT INTO products (name, price, stock, description)
+                VALUES (@name, @price, @stock, @description)
+            ";
+
+            SQLiteParameter[] p =
             {
-                new SQLiteParameter("@name", row["Name"]),
-                new SQLiteParameter("@price", row["Price"]),
-                new SQLiteParameter("@stock", row["stock"]),
-                new SQLiteParameter("@description", row["description"]),
-                new SQLiteParameter("@id", row["id"])
+                new SQLiteParameter("@name", product.Name),
+                new SQLiteParameter("@price", product.Price),
+                new SQLiteParameter("@stock", product.Stock),
+                new SQLiteParameter("@description", product.Description ?? string.Empty),
             };
-            return DatabaseHelper.Execute(sql, parameters);
+
+            return DatabaseHelper.Execute(sql, p);
         }
 
+
+        // =======================================================
+        // 更新
+        // =======================================================
+        public int UpdateProduct(Product product)
+        {
+            string sql = @"
+                UPDATE products
+                SET name=@name, price=@price, stock=@stock, description=@description
+                WHERE id=@id
+            ";
+
+            SQLiteParameter[] p =
+            {
+                new SQLiteParameter("@name", product.Name),
+                new SQLiteParameter("@price", product.Price),
+                new SQLiteParameter("@stock", product.Stock),
+                new SQLiteParameter("@description", product.Description ?? string.Empty),
+                new SQLiteParameter("@id", product.Id)
+            };
+
+            return DatabaseHelper.Execute(sql, p);
+        }
+
+
+        // =======================================================
+        // 更新价格
+        // =======================================================
         public int UpdateProductPrice(int productId, double newPrice)
         {
             string sql = "UPDATE products SET price=@price WHERE id=@id";
-            SQLiteParameter[] parameters =
+
+            SQLiteParameter[] p =
             {
                 new SQLiteParameter("@price", newPrice),
                 new SQLiteParameter("@id", productId)
             };
-            return DatabaseHelper.Execute(sql, parameters);
+
+            return DatabaseHelper.Execute(sql, p);
         }
 
-        /// <summary>
-        /// 删除商品
-        /// </summary>
+
+        // =======================================================
+        // 删除
+        // =======================================================
         public int DeleteProduct(int productId)
         {
             string sql = "DELETE FROM products WHERE id=@id";
-            SQLiteParameter[] parameters =
-            {
-                new SQLiteParameter("@id", productId)
-            };
-            return DatabaseHelper.Execute(sql, parameters);
+
+            return DatabaseHelper.Execute(sql, new SQLiteParameter("@id", productId));
         }
 
 
+        // =======================================================
+        // 映射辅助方法
+        // =======================================================
+        private Product MapToProduct(System.Data.DataRow row)
+        {
+            return new Product
+            {
+                Id = row["id"] != DBNull.Value ? Convert.ToInt32(row["id"]) : 0,
+                Name = row["name"]?.ToString() ?? "",
+                Price = row["price"] != DBNull.Value ? Convert.ToDouble(row["price"]) : 0.0,
+                Stock = row["stock"] != DBNull.Value ? Convert.ToInt32(row["stock"]) : 0,
+                Description = row["description"]?.ToString() ?? ""
+            };
+        }
     }
 }

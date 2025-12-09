@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.SQLite;
 
-namespace ProductManagerApp.Data
+namespace ProductManagerApp.DAL
 {
     public class DatabaseHelper
     {
