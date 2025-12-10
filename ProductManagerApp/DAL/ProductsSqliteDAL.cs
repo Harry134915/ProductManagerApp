@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.Models;
+﻿using ProductManagerApp.Model;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;

@@ -1,5 +1,5 @@
 ﻿using ProductManagerApp.BLL;
-using ProductManagerApp.Models;
+using ProductManagerApp.Model;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
