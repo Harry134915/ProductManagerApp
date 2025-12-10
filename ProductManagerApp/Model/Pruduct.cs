@@ -15,7 +15,7 @@
         /// <summary>
         /// 获取或设置商品价格
         /// </summary>
-        public double Price { get; set; }
+        public decimal Price { get; set; }
 
         /// <summary>
         /// 获取或设置库存数量

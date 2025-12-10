@@ -138,7 +138,7 @@ namespace ProductManagerApp.BLL
         // ============================================================
         // 更新价格
         // ============================================================
-        public void UpdateProductPrice(int productId, double newPrice)
+        public void UpdateProductPrice(int productId, decimal newPrice)
         {
             _productDAL.UpdateProductPrice(productId, newPrice);
         }

@@ -22,6 +22,6 @@ namespace ProductManagerApp.BLL
         //更新
         void UpdateProduct(Product product);
 
-        void UpdateProductPrice(int productId, double newPrice);
+        void UpdateProductPrice(int productId, decimal newPrice);
     }
 }

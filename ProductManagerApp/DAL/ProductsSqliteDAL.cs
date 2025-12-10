@@ -93,7 +93,7 @@ namespace ProductManagerApp.DAL
         // =======================================================
         // 更新价格
         // =======================================================
-        public int UpdateProductPrice(int productId, double newPrice)
+        public int UpdateProductPrice(int productId, decimal newPrice)
         {
             string sql = "UPDATE products SET price=@price WHERE id=@id";
 
@@ -127,7 +127,7 @@ namespace ProductManagerApp.DAL
             {
                 Id = row["id"] != DBNull.Value ? Convert.ToInt32(row["id"]) : 0,
                 Name = row["name"]?.ToString() ?? "",
-                Price = row["price"] != DBNull.Value ? Convert.ToDouble(row["price"]) : 0.0,
+                Price = row["price"] != DBNull.Value ? Convert.ToDecimal(row["price"]) : 0m,
                 Stock = row["stock"] != DBNull.Value ? Convert.ToInt32(row["stock"]) : 0,
                 Description = row["description"]?.ToString() ?? ""
             };

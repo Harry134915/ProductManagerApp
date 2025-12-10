@@ -94,7 +94,7 @@ namespace ProductManagerApp.ViewModels
                 return;
             }
 
-            double.TryParse(Price, out double price);
+            decimal.TryParse(Price, out decimal price);
             int.TryParse(Stock, out int stock);
 
             var product = new Product

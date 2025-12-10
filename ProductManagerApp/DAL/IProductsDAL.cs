@@ -22,7 +22,7 @@ namespace ProductManagerApp.DAL
         int UpdateProduct(Product product);
 
         // 仅更新价格
-        int UpdateProductPrice(int productId, double newPrice);
+        int UpdateProductPrice(int productId, decimal newPrice);
 
         // 删除
         int DeleteProduct(int productId);
