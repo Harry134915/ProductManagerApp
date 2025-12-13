@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.Model;
+﻿using ProductManagerApp.Entity;
 using System.Collections.Generic;
 
 namespace ProductManagerApp.DAL

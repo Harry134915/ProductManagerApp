@@ -16,117 +16,130 @@
         </Grid.RowDefinitions>
 
         <!-- 顶部输入区域 -->
-        <StackPanel Orientation="Horizontal" Margin="0 0 0 10">
-
-            <!-- ===========================
+        <StackPanel Orientation="Vertical" Margin="0 0 0 10">
+            <StackPanel Orientation="Horizontal">
+                <!-- ===========================
                  商品名称
             ============================ -->
-            <Grid Margin="0,0,5,0">
-                <TextBox x:Name="NameBox"
+                <Grid Margin="0,0,5,0">
+                    <TextBox x:Name="NameBox"
                          Width="150" Padding="5"
-                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged,ValidatesOnDataErrors=True}"
                          VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="请输入商品名称"
+                    <TextBlock Text="请输入商品名称"
                            Foreground="Gray"
                            Margin="8,0,0,0"
                            VerticalAlignment="Center"
                            IsHitTestVisible="False">
 
-                    <TextBlock.Visibility>
-                        <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
-                            <Binding ElementName="NameBox" Path="Text"/>
-                            <Binding ElementName="NameBox" Path="IsKeyboardFocused"/>
-                        </MultiBinding>
-                    </TextBlock.Visibility>
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
+                                <Binding ElementName="NameBox" Path="Text"/>
+                                <Binding ElementName="NameBox" Path="IsKeyboardFocused"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
 
-                </TextBlock>
-            </Grid>
+                    </TextBlock>
+                </Grid>
 
 
-            <!-- ===========================
+                <!-- ===========================
                  价格
             ============================ -->
-            <Grid Margin="0,0,5,0">
-                <TextBox x:Name="PriceBox"
+                <Grid Margin="0,0,5,0">
+                    <TextBox x:Name="PriceBox"
                          Width="100" Padding="5"
-                         Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Price, UpdateSourceTrigger=PropertyChanged,ValidatesOnDataErrors=True}"
                          VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="请输入价格"
+                    <TextBlock Text="请输入价格"
                            Foreground="Gray"
                            Margin="8,0,0,0"
                            VerticalAlignment="Center"
                            IsHitTestVisible="False">
 
-                    <TextBlock.Visibility>
-                        <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
-                            <Binding ElementName="PriceBox" Path="Text"/>
-                            <Binding ElementName="PriceBox" Path="IsKeyboardFocused"/>
-                        </MultiBinding>
-                    </TextBlock.Visibility>
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
+                                <Binding ElementName="PriceBox" Path="Text"/>
+                                <Binding ElementName="PriceBox" Path="IsKeyboardFocused"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
 
-                </TextBlock>
-            </Grid>
+                    </TextBlock>
+                </Grid>
 
 
-            <!-- ===========================
+                <!-- ===========================
                  库存
             ============================ -->
-            <Grid Margin="0,0,5,0">
-                <TextBox x:Name="StockBox"
+                <Grid Margin="0,0,5,0">
+                    <TextBox x:Name="StockBox"
                          Width="80" Padding="5"
-                         Text="{Binding Stock, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding Stock, UpdateSourceTrigger=PropertyChanged,ValidatesOnDataErrors=True}"
                          VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="请输入库存"
+                    <TextBlock Text="请输入库存"
                            Foreground="Gray"
                            Margin="8,0,0,0"
                            VerticalAlignment="Center"
                            IsHitTestVisible="False">
 
-                    <TextBlock.Visibility>
-                        <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
-                            <Binding ElementName="StockBox" Path="Text"/>
-                            <Binding ElementName="StockBox" Path="IsKeyboardFocused"/>
-                        </MultiBinding>
-                    </TextBlock.Visibility>
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
+                                <Binding ElementName="StockBox" Path="Text"/>
+                                <Binding ElementName="StockBox" Path="IsKeyboardFocused"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
 
-                </TextBlock>
-            </Grid>
+                    </TextBlock>
+                </Grid>
 
 
-            <!-- ===========================
+                <!-- ===========================
                  描述
             ============================ -->
-            <Grid Margin="0,0,5,0">
-                <TextBox x:Name="DescBox"
+                <Grid Margin="0,0,5,0">
+                    <TextBox x:Name="DescBox"
                          Width="120" Padding="5"
                          Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                          VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="请输入描述"
+                    <TextBlock Text="请输入描述"
                            Foreground="Gray"
                            Margin="8,0,0,0"
                            VerticalAlignment="Center"
                            IsHitTestVisible="False">
 
-                    <TextBlock.Visibility>
-                        <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
-                            <Binding ElementName="DescBox" Path="Text"/>
-                            <Binding ElementName="DescBox" Path="IsKeyboardFocused"/>
-                        </MultiBinding>
-                    </TextBlock.Visibility>
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
+                                <Binding ElementName="DescBox" Path="Text"/>
+                                <Binding ElementName="DescBox" Path="IsKeyboardFocused"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
 
-                </TextBlock>
-            </Grid>
+                    </TextBlock>
+                </Grid>
+            </StackPanel>
 
-            <!-- 按钮绑定命令 -->
-            <Button Content="添加" Width="80" Margin="5,0"
+
+
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                <!-- 按钮绑定命令 -->
+                <Button Content="添加" Width="80" 
                     Command="{Binding AddCommand}"/>
 
-            <Button Content="刷新" Width="80" Margin="5,0"
+                <Button Content="刷新" Width="80" Margin="10,0"
                     Command="{Binding RefreshCommand}"/>
+            </StackPanel>
+
+
+            <!-- ===========================
+         错误/成功提示行
+         ============================ -->
+            <TextBlock Text="{Binding ErrorMessage}"
+                Foreground="Red"
+                Margin="0,5,0,0"/>
         </StackPanel>
 
         <!-- 数据表格 -->

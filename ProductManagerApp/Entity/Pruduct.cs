@@ -1,4 +1,4 @@
-﻿namespace ProductManagerApp.Model
+﻿namespace ProductManagerApp.Entity
 {
     public class Product
     {

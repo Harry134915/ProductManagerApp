@@ -1,96 +1,6 @@
-﻿//using ProductManagerApp.DAL;
-//using ProductManagerApp.Models;
-//using System;
-//using System.Collections.Generic;
-//using System.Data;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
-
-//namespace ProductManagerApp.BLL
-//{
-//    internal class ProductsBLL : IProductsBLL
-//    {
-//        private readonly IProductsDAL _productDAL;
-
-//        public ProductsBLL()
-//        {
-//            _productDAL = new ProductsSqliteDAL();
-//        }
-
-//        //BLL：将DataTable➡List<Product>
-
-//        public List<Product> GetAllProducts()
-//        {
-//            DataTable table = _productDAL.QueryProducts();
-
-//            List<Product> products = new List<Product>();
-
-//            foreach (DataRow row in table.Rows)
-//            {
-//                products.Add(MapToProduct(row));
-//            }
-//            return products;
-//        }
-
-//        //public void AddProduct(Product product)
-//        //{
-//        //    _productDAL.AddProduct(product);
-//        //}
-
-//        public void UpdateProductPrice(int productId, double newPrice)
-//        {
-//            //BLL 决定"更新什么"
-//            _productDAL.UpdateProductPrice(productId, newPrice); 
-
-//            //TODO:如果我想要有一个更新指定字段的方法.
-
-//        }
-
-//        public void UpdateProduct(Product product)
-//        {
-//            _productDAL.UpdateProduct(product);
-//        }
-
-//        public void DeleteProduct(int productId)
-//        {
-//            _productDAL.QueryProductById(productId);
-//        }
-
-//        private Product MapToProduct(DataRow row)
-//        {
-//            return new Product
-//            {
-//                Id = Convert.ToInt32(row["id"]),
-//                Name = row["Name"].ToString()!,
-//                Price = Convert.ToDouble(row["Price"]),
-//                Description = row["Description"]?.ToString(),
-//            };
-//        }
-//        private DataRow MapToRow(Product product, DataTable schema)
-//        {
-//            DataRow row = schema.NewRow();
-//            row["id"] = product.Id;
-//            row["name"] = product.Name;
-//            row["price"] = product.Price;
-//            row["stock"] = product.Stock;
-//            row["description"] = product.Description;
-//            return row;
-//        }
-
-//        public void AddProduct(Product product)
-//        {
-//            DataTable schema = _productDAL.QueryProducts();
-//            DataRow row = MapToRow(product, schema);
-//            _productDAL.AddProduct(row);
-//        }
-
-
-//    }
-//}
-
+﻿using ProductManagerApp.BLL.Exceptions;
 using ProductManagerApp.DAL;
-using ProductManagerApp.Model;
+using ProductManagerApp.Entity;
 using System;
 using System.Collections.Generic;
 
@@ -118,9 +28,14 @@ namespace ProductManagerApp.BLL
         // ============================================================
         public void AddProduct(Product product)
         {
+            //1.防御性编程
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
+            //2.业务校验
+            ValidateProduct(product);
+
+            //3.通过校验，允许调dal
             _productDAL.AddProduct(product);
         }
 
@@ -132,7 +47,18 @@ namespace ProductManagerApp.BLL
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
+            if (product.Id <= 0)
+            {
+                throw new ProductValidationException("id不合法！");
+            }
+
+            ValidateProduct(product);
+
             _productDAL.UpdateProduct(product);
+
+            //nameof 是 C# 的一个编译期关键字，将“代码里的名字”，安全地变成“字符串”
+            //你可以调用我，但前提是 product 不能为空
+            //如果你违反契约，我会立刻报错
         }
 
         // ============================================================
@@ -140,6 +66,12 @@ namespace ProductManagerApp.BLL
         // ============================================================
         public void UpdateProductPrice(int productId, decimal newPrice)
         {
+            if (productId <= 0)
+                throw new ProductValidationException("商品id不合法！");
+
+            if (newPrice <= 0)
+                throw new ProductValidationException("价格必须大于0！");
+
             _productDAL.UpdateProductPrice(productId, newPrice);
         }
 
@@ -148,7 +80,40 @@ namespace ProductManagerApp.BLL
         // ============================================================
         public void DeleteProduct(int productId)
         {
+            if (productId <= 0)
+                throw new ProductValidationException("商品id不合法！");
+
             _productDAL.DeleteProduct(productId);
         }
+
+        // ============================================================
+        // 私有方法：商品业务校验
+        // ============================================================
+        //ValidateAndSetError 是 UI 校验/格式化
+        //ValidateProduct 是 核心业务校验
+        private void ValidateProduct(Product product)
+        {
+            if (string.IsNullOrWhiteSpace(product.Name))
+            {
+                throw new ProductValidationException("商品名称不能为空！");
+            }
+
+            if (product.Price <= 0)
+            {
+                throw new ProductValidationException("价格必须大于0！");
+            }
+
+            if (product.Stock < 0)
+            {
+                throw new ProductValidationException("库存不能为负数！");
+            }
+
+            if (product.Description != null &&
+                string.IsNullOrWhiteSpace(product.Description))
+            {
+                throw new ProductValidationException("描述不能只有空白字符！");
+            }
+        }
+
     }
 }
