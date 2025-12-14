@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.DTO;
 
 
 namespace ProductManagerApp.ViewModels
@@ -15,8 +16,6 @@ namespace ProductManagerApp.ViewModels
         private readonly IProductsBLL _productsBLL;
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-
         public MainWindowViewModel()
         {
             _productsBLL = new ProductsBLL();
@@ -131,7 +130,6 @@ namespace ProductManagerApp.ViewModels
         // 添加商品
         // ============================================================
 
-
         //不关心 UI
         //不关心怎么提示
         //只关心业务能不能继续
@@ -155,7 +153,7 @@ namespace ProductManagerApp.ViewModels
                 }
 
                 //2.构造实体（不做业务判断）
-                var product = new Product
+                var dto = new ProductCreateDto
                 {
                     Name = Name,
                     Price = price,
@@ -164,7 +162,7 @@ namespace ProductManagerApp.ViewModels
                 };
 
                 //3.交给BLL（唯一的业务裁判）
-                _productsBLL.AddProduct(product);
+                _productsBLL.AddProduct(dto);
 
 
                 //4.提示成功

@@ -1,4 +1,5 @@
 ﻿using ProductManagerApp.Entity;
+using ProductManagerApp.DTO;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,7 +15,7 @@ namespace ProductManagerApp.BLL
         List<Product> GetAllProducts();
 
         //新增
-        void AddProduct(Product product);
+        void AddProduct(ProductCreateDto dto);
 
         //删除
         void DeleteProduct(int productId);

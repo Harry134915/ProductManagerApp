@@ -1,6 +1,7 @@
 ﻿using ProductManagerApp.BLL.Exceptions;
 using ProductManagerApp.DAL;
 using ProductManagerApp.Entity;
+using ProductManagerApp.DTO;
 using System;
 using System.Collections.Generic;
 
@@ -26,16 +27,25 @@ namespace ProductManagerApp.BLL
         // ============================================================
         // 新增
         // ============================================================
-        public void AddProduct(Product product)
+        public void AddProduct(ProductCreateDto dto)
         {
-            //1.防御性编程
-            if (product == null)
-                throw new ArgumentNullException(nameof(product));
+            //1.防御性编程(DTO本身不可为空)
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-            //2.业务校验
+            //2.DTO -> Entity (此处是"翻译层")
+            var product = new Product
+            {
+                Name = dto.Name,
+                Price = dto.Price,
+                Stock = dto.Stock,
+                Description = dto.Description
+            };
+
+            //3.业务校验(只认Entity)
             ValidateProduct(product);
 
-            //3.通过校验，允许调dal
+            //4.通过校验，允许调dal
             _productDAL.AddProduct(product);
         }
 
