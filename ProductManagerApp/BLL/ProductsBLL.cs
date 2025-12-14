@@ -65,10 +65,10 @@ namespace ProductManagerApp.BLL
             var product = new Product
             {
                 Id = dto.Id,
-                Name= dto.Name,
-                Price= dto.Price,
-                Stock= dto.Stock,
-                Description= dto.Description
+                Name = dto.Name,
+                Price = dto.Price,
+                Stock = dto.Stock,
+                Description = dto.Description
             };
 
             ValidateProduct(product);

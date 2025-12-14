@@ -36,6 +36,30 @@ namespace ProductManagerApp.ViewModels
                 );
             //刷新的时候，按钮自动灰掉
 
+            UpdateCommand = new RelayCommand
+                (
+                _ => UpdateProduct(),
+                _ => CanUpdateExecute()
+                );
+
+            DeleteCommand = new RelayCommand
+                (
+                _ => DeleteProduct(),
+                _ => SelectedProduct != null
+                );
+
+            ConfirmDeleteCommand = new RelayCommand
+                (
+                _ => ConfirmDelete(),
+                _ => ProductToDelete != null
+                );
+
+            CancelDeleteCommand = new RelayCommand
+                (
+                _ => CancelDelete(),
+                _ => IsDeleteConfirmVisible
+                );
+
             // 启动加载
             LoadProducts();
         }
@@ -146,6 +170,34 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
+        // ============================================================
+        // 删除确认状态
+        // ============================================================
+        private bool _isDeleteConfirmVisible;
+        public bool IsDeleteConfirmVisible
+        {
+            get => _isDeleteConfirmVisible;
+            set
+            {
+                _isDeleteConfirmVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // ============================================================
+        // 待确认删除的商品
+        // ============================================================
+        private Product _productToDelete;
+        public Product ProductToDelete
+        {
+            get => _productToDelete;
+            set
+            {
+                _productToDelete = value;
+                OnPropertyChanged();
+            }
+        }
+
         private string _statusMessage;
         public string StatusMessage
         {
@@ -183,6 +235,139 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
+        // ============================================================
+        // 选中商品，为商品的更新和删除做准备
+        // ============================================================
+        private Product _selectedProduct;
+        public Product SelectedProduct
+        {
+            get => _selectedProduct;
+            set
+            {
+                _selectedProduct = value;
+                OnPropertyChanged();
+
+                if (_selectedProduct != null)
+                {
+                    Name = _selectedProduct.Name;
+                    Price = _selectedProduct.Price.ToString();
+                    Stock = _selectedProduct.Stock.ToString();
+                    Description = _selectedProduct.Description;
+                }
+
+                //选中变化，按钮状态重新评估
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        // ============================================================
+        // 更新商品
+        // ============================================================
+        private void UpdateProduct()
+        {
+            if (SelectedProduct == null)
+            {
+                ErrorMessage = "请选择要更新的商品！";
+                return;
+            }
+
+            try
+            {
+                ErrorMessage = string.Empty;
+
+                if (!decimal.TryParse(Price, out decimal price))
+                {
+                    ErrorMessage = "价格格式不正确！";
+                    return;
+                }
+
+                if (!int.TryParse(Stock, out int stock))
+                {
+                    ErrorMessage = "库存格式不正确！";
+                    return;
+                }
+
+                var dto = new ProductUpdateDto
+                {
+                    Id = SelectedProduct.Id,
+                    Name = Name,
+                    Price = price,
+                    Stock = stock,
+                    Description = Description
+                };
+
+                _productsBLL.UpdateProduct(dto);
+
+                StatusMessage = "更新成功！";
+                LoadProducts();
+                ClearInputs();
+            }
+            catch (ProductValidationException ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            catch (Exception)
+            {
+                ErrorMessage = "系统异常，请稍后再试！";
+            }
+        }
+
+
+        // ============================================================
+        // 删除商品
+        // ============================================================
+        private void DeleteProduct()
+        {
+            if (SelectedProduct == null)
+            {
+                return;
+            }
+
+            ProductToDelete = SelectedProduct;
+            IsDeleteConfirmVisible = true;
+        }
+
+        // ============================================================
+        // 删除的真正逻辑
+        // ============================================================
+        private void ConfirmDelete()
+        {
+            if (ProductToDelete == null)
+                return;
+
+            try
+            {
+                _productsBLL.DeleteProduct(ProductToDelete.Id);
+
+                StatusMessage = $"已删除商品！:{ProductToDelete.Name}";
+                LoadProducts();
+            }
+
+            catch (ProductValidationException ex)
+            {
+                StatusMessage = ex.Message;
+            }
+
+            catch (Exception)
+            {
+                StatusMessage = "删除失败，请稍后再试！";
+            }
+
+            finally
+            {
+                ProductToDelete = null;
+                IsDeleteConfirmVisible = false;
+            }
+        }
+
+        // ============================================================
+        // 取消删除
+        // ============================================================
+        private void CancelDelete()
+        {
+            ProductToDelete = null;
+            IsDeleteConfirmVisible = false;
+        }
 
         // ============================================================
         // 添加商品
@@ -285,12 +470,35 @@ namespace ProductManagerApp.ViewModels
         //out decimal price和out _的区别：前者是点击“添加”按钮，后面需要用到 price
         //而后者则是CanExecute 判断按钮是否可用，只关心格式是否正确，不需要值
 
+        private bool CanUpdateExecute()
+        {
+            if (SelectedProduct == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(Name))
+                return false;
+
+            if (!decimal.TryParse(Price, out _))
+                return false;
+
+            if (!int.TryParse(Stock, out _))
+                return false;
+
+            return true;
+        }
+
+
         // ============================================================
         // 命令（绑定按钮）
         // ============================================================
 
         public ICommand AddCommand { get; }
         public ICommand RefreshCommand { get; }
+        public ICommand UpdateCommand { get; }
+        public ICommand DeleteCommand { get; }
+        public ICommand ConfirmDeleteCommand { get; }
+        public ICommand CancelDeleteCommand { get; }
+
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {

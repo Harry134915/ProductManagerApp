@@ -7,6 +7,9 @@
     <Window.Resources>
         <!-- Placeholder 转换器（MultiValueConverter） -->
         <local:TextEmptyToVisibilityConverter x:Key="TextEmptyToVisibilityConverter"/>
+
+        <!-- bool -> Visibility 转换器 -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid Margin="10">
@@ -131,32 +134,86 @@
 
                 <Button Content="刷新" Width="80" Margin="10,0"
                     Command="{Binding RefreshCommand}"/>
+
+                <Button Content="更新" Width="80" 
+                    Command="{Binding UpdateCommand}"/>
+
+                <Button Content="删除" Width="80" Margin="10,0"
+                    Command="{Binding DeleteCommand}"/>
             </StackPanel>
 
+            <Border
+                Background="#FFFDECEA"
+                BorderBrush="Red"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="10"
+                Margin="0,5,0,0"
+                Visibility="{Binding IsDeleteConfirmVisible,
+                                     Converter={StaticResource BoolToVisibilityConverter}}">
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                    <TextBlock
+                Text="确定要删除商品："
+                Foreground="DarkRed"/>
+
+                    <TextBlock
+                Text="{Binding ProductToDelete.Name}"
+                FontWeight="Bold"
+                Foreground="DarkRed"
+                Margin="5,0"/>
+
+                    <Button
+                Content="确认删除"
+                Margin="10,0"
+                Command="{Binding ConfirmDeleteCommand}"/>
+
+                    <Button
+                Content="取消"
+                Margin="5,0"
+                Command="{Binding CancelDeleteCommand}"/>
+                </StackPanel>
+            </Border>
+
+
 
             <!-- ===========================
-             错误/成功提示行
-        ============================ -->
+         错误/成功提示行
+         ============================ -->
             <TextBlock 
-            Text="{Binding ErrorMessage}"
-            Foreground="Red"
-            Margin="0,5,0,0"/>
+                Text="{Binding ErrorMessage}"
+                Foreground="Red"
+                Margin="0,5,0,0"/>
 
             <!-- ===========================
-              刷新成功/失败提示行
-        ============================ -->
+         刷新成功/失败提示行
+         ============================ -->
             <TextBlock
-            Text="{Binding StatusMessage}"
-            Foreground="SkyBlue"
-            Margin="10,5,0,0"/>
+                Text="{Binding StatusMessage}"
+                Foreground="SkyBlue"
+                Margin="10,5,0,0"/>
+
         </StackPanel>
 
         <!-- 数据表格 -->
-        <DataGrid Grid.Row="1" Margin="0,10,0,0"
-                  ItemsSource="{Binding Products}"
-                  AutoGenerateColumns="True"
-                  IsReadOnly="True"
-                  SelectionMode="Single"/>
+        <DataGrid Grid.Row="1"
+          Margin="0,10,0,0"
+          ItemsSource="{Binding Products}"
+          AutoGenerateColumns="False"
+          SelectedItem="{Binding SelectedProduct}"
+          IsReadOnly="True"
+          SelectionMode="Single">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="价格" Binding="{Binding Price}" Width="100"/>
+                <DataGridTextColumn Header="库存" Binding="{Binding Stock}" Width="80"/>
+                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
 
     </Grid>
 </Window>
