@@ -29,7 +29,12 @@ namespace ProductManagerApp.ViewModels
                 _ => CanAddExecute()
                 );
 
-            RefreshCommand = new RelayCommand(_ => LoadProducts());
+            RefreshCommand = new RelayCommand
+                (
+                _ => Refresh(),
+                _ => !IsRefreshing
+                );
+            //刷新的时候，按钮自动灰掉
 
             // 启动加载
             LoadProducts();
@@ -125,6 +130,59 @@ namespace ProductManagerApp.ViewModels
                 Products.Add(product);
             }
         }
+
+        // ============================================================
+        // 刷新UX
+        // ============================================================
+        private bool _isRefreshing;
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set
+            {
+                _isRefreshing = value;
+                OnPropertyChanged();
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        private string _statusMessage;
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set
+            {
+                _statusMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // ============================================================
+        // 一个刷新的方法
+        // ============================================================
+        private void Refresh()
+        {
+            try
+            {
+                _isRefreshing = true;
+                StatusMessage = "正在刷新商品列表...";
+
+                LoadProducts();
+
+                StatusMessage = $"刷新完成，共{Products.Count}条商品";
+            }
+
+            catch (Exception)
+            {
+                StatusMessage = "刷新失败，请稍后再试！";
+            }
+
+            finally
+            {
+                IsRefreshing = false;
+            }
+        }
+
 
         // ============================================================
         // 添加商品

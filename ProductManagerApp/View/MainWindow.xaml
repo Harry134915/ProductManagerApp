@@ -135,11 +135,20 @@
 
 
             <!-- ===========================
-         错误/成功提示行
-         ============================ -->
-            <TextBlock Text="{Binding ErrorMessage}"
-                Foreground="Red"
-                Margin="0,5,0,0"/>
+             错误/成功提示行
+        ============================ -->
+            <TextBlock 
+            Text="{Binding ErrorMessage}"
+            Foreground="Red"
+            Margin="0,5,0,0"/>
+
+            <!-- ===========================
+              刷新成功/失败提示行
+        ============================ -->
+            <TextBlock
+            Text="{Binding StatusMessage}"
+            Foreground="SkyBlue"
+            Margin="10,5,0,0"/>
         </StackPanel>
 
         <!-- 数据表格 -->
