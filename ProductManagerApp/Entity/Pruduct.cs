@@ -27,4 +27,12 @@
         /// </summary>
         public string Description { get; set; } = "";
     }
+
+    // UI 层：string
+
+    // DTO 层：非 nullable 值类型
+
+    // Entity 层：非 nullable 值类型
+
+    // BLL：负责兜底校验，不和 null 打交道
 }

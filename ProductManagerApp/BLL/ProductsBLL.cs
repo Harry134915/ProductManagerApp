@@ -52,15 +52,24 @@ namespace ProductManagerApp.BLL
         // ============================================================
         // 更新
         // ============================================================
-        public void UpdateProduct(Product product)
+        public void UpdateProduct(ProductUpdateDto dto)
         {
-            if (product == null)
-                throw new ArgumentNullException(nameof(product));
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
 
-            if (product.Id <= 0)
+            if (dto.Id <= 0)
             {
                 throw new ProductValidationException("id不合法！");
             }
+
+            var product = new Product
+            {
+                Id = dto.Id,
+                Name= dto.Name,
+                Price= dto.Price,
+                Stock= dto.Stock,
+                Description= dto.Description
+            };
 
             ValidateProduct(product);
 
