@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace ProductManagerApp.BLL
 {
-    public interface IProductsBLL
+    public interface IProductBLL
     {
         //查询
-        List<Product> GetAllProducts();
+        List<ProductQueryDto> GetAllProducts();
 
         //新增
         void AddProduct(ProductCreateDto dto);

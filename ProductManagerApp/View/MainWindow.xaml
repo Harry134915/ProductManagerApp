@@ -22,6 +22,32 @@
         <StackPanel Orientation="Vertical" Margin="0 0 0 10">
             <StackPanel Orientation="Horizontal">
                 <!-- ===========================
+                 商品编码
+            ============================ -->
+                <Grid Margin="0,0,5,0">
+                    <TextBox x:Name="CodeBox"
+                         Width="150" Padding="5"
+                         Text="{Binding Code, UpdateSourceTrigger=PropertyChanged,ValidatesOnDataErrors=True}"
+                         VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="请输入商品编码"
+                           Foreground="Gray"
+                           Margin="8,0,0,0"
+                           VerticalAlignment="Center"
+                           IsHitTestVisible="False">
+
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{StaticResource TextEmptyToVisibilityConverter}">
+                                <Binding ElementName="CodeBox" Path="Text"/>
+                                <Binding ElementName="CodeBox" Path="IsKeyboardFocused"/>
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+
+                    </TextBlock>
+                </Grid>
+
+
+                <!-- ===========================
                  商品名称
             ============================ -->
                 <Grid Margin="0,0,5,0">
@@ -207,6 +233,7 @@
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="商品编码" Binding="{Binding Code}" Width="100"/>
                 <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="*"/>
                 <DataGridTextColumn Header="价格" Binding="{Binding Price}" Width="100"/>
                 <DataGridTextColumn Header="库存" Binding="{Binding Stock}" Width="80"/>

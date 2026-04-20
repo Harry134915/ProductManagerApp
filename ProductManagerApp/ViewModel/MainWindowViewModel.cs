@@ -1,5 +1,6 @@
 ﻿using ProductManagerApp.BLL;
 using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.DAL;
 using ProductManagerApp.DTO;
 using ProductManagerApp.Entity;
 using System.Collections.ObjectModel;
@@ -14,14 +15,14 @@ namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private readonly IProductsBLL _productsBLL;
+        private readonly IProductBLL _productsBLL;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public MainWindowViewModel()
         {
-            _productsBLL = new ProductsBLL();
+            _productsBLL = new ProductBLL(new ProductSqliteDAL());
 
-            Products = new ObservableCollection<Product>();
+            Products = new ObservableCollection<ProductQueryDto>();
 
             // 初始化命令
             AddCommand = new RelayCommand
@@ -74,6 +75,19 @@ namespace ProductManagerApp.ViewModels
         //→ 属性 setter
         //→ CanExecute 重新评估
         //→ 按钮自动灰 / 亮
+
+        private string? _code;
+        public string? Code
+        {
+            get => _code;
+            set
+            {
+                _code = value;
+                OnPropertyChanged();
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
         private string? _name;
         public string? Name
         {
@@ -135,7 +149,7 @@ namespace ProductManagerApp.ViewModels
         }
 
         // 商品列表（绑定 DataGrid）
-        public ObservableCollection<Product> Products { get; set; }
+        public ObservableCollection<ProductQueryDto> Products { get; set; }
 
 
         // ============================================================
@@ -188,8 +202,8 @@ namespace ProductManagerApp.ViewModels
         // ============================================================
         // 待确认删除的商品
         // ============================================================
-        private Product _productToDelete;
-        public Product ProductToDelete
+        private ProductQueryDto _productToDelete;
+        public ProductQueryDto ProductToDelete
         {
             get => _productToDelete;
             set
@@ -239,8 +253,8 @@ namespace ProductManagerApp.ViewModels
         // ============================================================
         // 选中商品，为商品的更新和删除做准备
         // ============================================================
-        private Product _selectedProduct;
-        public Product SelectedProduct
+        private ProductQueryDto _selectedProduct;
+        public ProductQueryDto SelectedProduct
         {
             get => _selectedProduct;
             set
@@ -250,6 +264,7 @@ namespace ProductManagerApp.ViewModels
 
                 if (_selectedProduct != null)
                 {
+                    Code = _selectedProduct.Code;
                     Name = _selectedProduct.Name;
                     Price = _selectedProduct.Price.ToString();
                     Stock = _selectedProduct.Stock.ToString();
@@ -291,6 +306,7 @@ namespace ProductManagerApp.ViewModels
                 var dto = new ProductUpdateDto
                 {
                     Id = SelectedProduct.Id,
+                    Code = SelectedProduct.Code,
                     Name = Name,
                     Price = price,
                     Stock = stock,
@@ -340,8 +356,10 @@ namespace ProductManagerApp.ViewModels
             {
                 _productsBLL.DeleteProduct(ProductToDelete.Id);
 
-                StatusMessage = $"已删除商品！:{ProductToDelete.Name}";
+                StatusMessage = $"已删除商品:{ProductToDelete.Name}";
                 LoadProducts();
+                //清除输入框
+                ClearInputs();
             }
 
             catch (ProductValidationException ex)
@@ -384,6 +402,12 @@ namespace ProductManagerApp.ViewModels
                 ErrorMessage = string.Empty;
 
                 //1.字符串 -> 类型（仅格式）
+                if (!int.TryParse(Code, out int code))
+                {
+                    ErrorMessage = "商品编码格式不正确！";
+                    return;
+                }
+
                 if (!decimal.TryParse(Price, out decimal price))
                 {
                     ErrorMessage = "价格格式不正确！";
@@ -399,6 +423,7 @@ namespace ProductManagerApp.ViewModels
                 //2.构造实体（不做业务判断）
                 var dto = new ProductCreateDto
                 {
+                    Code = Code,
                     Name = Name,
                     Price = price,
                     Stock = stock,
@@ -434,6 +459,7 @@ namespace ProductManagerApp.ViewModels
         private void ClearInputs()
         {
             // 清空输入框
+            Code = "";
             Name = "";
             Price = "";
             Stock = "";
@@ -448,6 +474,11 @@ namespace ProductManagerApp.ViewModels
         //这正是 CanExecute 的唯一职责。
         private bool CanAddExecute()
         {
+            if (string.IsNullOrWhiteSpace(Code))
+                return false;
+            if (!int.TryParse(Code, out _))
+                return false;
+
             if (string.IsNullOrWhiteSpace(Name))
                 return false;
 
@@ -474,6 +505,9 @@ namespace ProductManagerApp.ViewModels
         private bool CanUpdateExecute()
         {
             if (SelectedProduct == null)
+                return false;
+
+            if (!int.TryParse(Code, out _))
                 return false;
 
             if (string.IsNullOrWhiteSpace(Name))

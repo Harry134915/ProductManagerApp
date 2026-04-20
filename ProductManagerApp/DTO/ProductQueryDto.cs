@@ -1,14 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ProductManagerApp.DTO
 {
-    /// <summary>
-    /// UI → BLL 用的数据对象（新增商品）
-    /// 不包含 Id
-    /// 不包含任何业务逻辑
-    /// </summary>
-    public class ProductCreateDto
+
+    //查询，展示
+    public class ProductQueryDto
     {
+        public int Id { get; set; }
         public string Code { get; set; } = "";
         public string Name { get; set; } = "";
         public decimal Price { get; set; }

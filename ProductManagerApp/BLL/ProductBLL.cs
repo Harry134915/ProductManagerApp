@@ -7,21 +7,33 @@ using System.Collections.Generic;
 
 namespace ProductManagerApp.BLL
 {
-    internal class ProductsBLL : IProductsBLL
+    internal class ProductBLL : IProductBLL
     {
-        private readonly IProductsDAL _productDAL;
+        private readonly IProductDAL _productDAL;
 
-        public ProductsBLL()
+
+        // 构造函数注入依赖，不再强绑定SqlliteDAL
+        public ProductBLL(IProductDAL productsDAL)
         {
-            _productDAL = new ProductsSqliteDAL();
+            _productDAL = productsDAL ?? throw new ArgumentNullException(nameof(productsDAL));
         }
 
         // ============================================================
-        // 查询全部
+        // 查询全部（这里返回Dto，不返回Entity）
         // ============================================================
-        public List<Product> GetAllProducts()
+        public List<ProductQueryDto> GetAllProducts()
         {
-            return _productDAL.GetAllProducts();
+            var products = _productDAL.GetAllProducts();
+
+            return products.Select(p => new ProductQueryDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                Name = p.Name,
+                Price = p.Price,
+                Stock = p.Stock,
+                Description = p.Description
+            }).ToList();
         }
 
         // ============================================================
@@ -36,6 +48,7 @@ namespace ProductManagerApp.BLL
             //2.DTO -> Entity (此处是"翻译层")
             var product = new Product
             {
+                Code = dto.Code,
                 Name = dto.Name,
                 Price = dto.Price,
                 Stock = dto.Stock,
@@ -64,6 +77,7 @@ namespace ProductManagerApp.BLL
 
             var product = new Product
             {
+                Code = dto.Code,
                 Id = dto.Id,
                 Name = dto.Name,
                 Price = dto.Price,
@@ -115,6 +129,11 @@ namespace ProductManagerApp.BLL
             if (string.IsNullOrWhiteSpace(product.Name))
             {
                 throw new ProductValidationException("商品名称不能为空！");
+            }
+
+            if (string.IsNullOrWhiteSpace(product.Code))
+            {
+                throw new ProductValidationException("商品编码不能为空！");
             }
 
             if (product.Price <= 0)

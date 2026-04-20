@@ -7,7 +7,7 @@ namespace ProductManagerApp.DAL
     /// 产品数据访问接口
     /// 只返回 Model，不再使用 DataTable
     /// </summary>
-    public interface IProductsDAL
+    public interface IProductDAL
     {
         // 查询全部
         List<Product> GetAllProducts();

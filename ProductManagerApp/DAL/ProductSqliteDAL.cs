@@ -5,14 +5,14 @@ using System.Data.SQLite;
 
 namespace ProductManagerApp.DAL
 {
-    internal class ProductsSqliteDAL : IProductsDAL
+    internal class ProductSqliteDAL : IProductDAL
     {
         // =======================================================
         // 查询全部
         // =======================================================
         public List<Product> GetAllProducts()
         {
-            string sql = "SELECT id, name, price, stock, description FROM products";
+            string sql = "SELECT id,code,name, price, stock, description FROM products";
             List<Product> list = new List<Product>();
 
             var dt = DatabaseHelper.Query(sql);
@@ -33,7 +33,7 @@ namespace ProductManagerApp.DAL
         // =======================================================
         public Product? GetProductById(int id)
         {
-            string sql = "SELECT id, name, price, stock, description FROM products WHERE id=@id";
+            string sql = "SELECT id,code, name, price, stock, description FROM products WHERE id=@id";
 
             var dt = DatabaseHelper.Query(sql, new SQLiteParameter("@id", id));
 
@@ -50,12 +50,13 @@ namespace ProductManagerApp.DAL
         public int AddProduct(Product product)
         {
             string sql = @"
-                INSERT INTO products (name, price, stock, description)
-                VALUES (@name, @price, @stock, @description)
+                INSERT INTO products (code, name, price, stock, description)
+                VALUES (@code, @name, @price, @stock, @description)
             ";
 
             SQLiteParameter[] p =
             {
+                new SQLiteParameter("@code", product.Code),
                 new SQLiteParameter("@name", product.Name),
                 new SQLiteParameter("@price", product.Price),
                 new SQLiteParameter("@stock", product.Stock),
@@ -126,6 +127,7 @@ namespace ProductManagerApp.DAL
             return new Product
             {
                 Id = row["id"] != DBNull.Value ? Convert.ToInt32(row["id"]) : 0,
+                Code = row["code"]?.ToString() ?? "",
                 Name = row["name"]?.ToString() ?? "",
                 Price = row["price"] != DBNull.Value ? Convert.ToDecimal(row["price"]) : 0m,
                 Stock = row["stock"] != DBNull.Value ? Convert.ToInt32(row["stock"]) : 0,

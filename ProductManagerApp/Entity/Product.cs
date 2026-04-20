@@ -8,6 +8,11 @@
         public int Id { get; set; }
 
         /// <summary>
+        /// 获取或设置商品编码
+        /// </summary>
+        public string Code { get; set; }
+
+        /// <summary>
         /// 获取或设置商品名称
         /// </summary>
         public string Name { get; set; } = "";
