@@ -1,13 +1,9 @@
 ﻿using ProductManagerApp.BLL;
 using ProductManagerApp.BLL.Exceptions;
-using ProductManagerApp.DAL;
 using ProductManagerApp.DTO;
-using ProductManagerApp.Entity;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 
@@ -18,9 +14,9 @@ namespace ProductManagerApp.ViewModels
         private readonly IProductBLL _productsBLL;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public MainWindowViewModel()
+        public MainWindowViewModel(IProductBLL productsBLL)
         {
-            _productsBLL = new ProductBLL(new ProductSqliteDAL());
+            _productsBLL = productsBLL;
 
             Products = new ObservableCollection<ProductQueryDto>();
 

@@ -9,11 +9,11 @@ namespace ProductManagerApp.BLL
 {
     internal class ProductBLL : IProductBLL
     {
-        private readonly IProductDAL _productDAL;
+        private readonly IProductRepository _productDAL;
 
 
         // 构造函数注入依赖，不再强绑定SqlliteDAL
-        public ProductBLL(IProductDAL productsDAL)
+        public ProductBLL(IProductRepository productsDAL)
         {
             _productDAL = productsDAL ?? throw new ArgumentNullException(nameof(productsDAL));
         }

@@ -1,7 +1,7 @@
 ﻿<Window x:Class="ProductManagerApp.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:ProductManagerApp.Views"
+        xmlns:local="clr-namespace:ProductManagerApp.View.Converters"
         Title="商品管理系统" Height="450" Width="700">
 
     <Window.Resources>

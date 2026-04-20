@@ -1,4 +1,6 @@
-﻿using ProductManagerApp.ViewModels;
+﻿using ProductManagerApp.BLL;
+using ProductManagerApp.DAL;
+using ProductManagerApp.ViewModels;
 using ProductManagerApp.Views;
 using System.Windows;
 
@@ -11,15 +13,24 @@ namespace ProductManagerApp
 {
     public partial class App : Application
     {
+        public static IServiceProvider Services { get; private set; } = null!;
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // 创建窗口
-            var mainWindow = new MainWindow();
+            const string connStr = "Data Source=database.db;Version=3;";
+            IDbProvider dbProvider = new SqliteProvider(connStr);
+            IProductRepository repo = new ProductRepository(dbProvider);
+            IProductBLL bll = new ProductBLL(repo);
 
             // 创建 ViewModel 并绑定
-            mainWindow.DataContext = new MainWindowViewModel();
+            var viewModel = new MainWindowViewModel(bll);
+
+            // 创建窗口
+            var mainWindow = new MainWindow
+            {
+                DataContext = viewModel
+            };
 
             // 显示窗口
             mainWindow.Show();
