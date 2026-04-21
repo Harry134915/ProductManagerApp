@@ -1,5 +1,5 @@
-﻿using ProductManagerApp.BLL;
-using ProductManagerApp.BLL.Exceptions;
+﻿using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.DTO;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,12 +11,12 @@ namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private readonly IProductBLL _productsBLL;
+        private readonly IProductService _service;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public MainWindowViewModel(IProductBLL productsBLL)
+        public MainWindowViewModel(IProductService service)
         {
-            _productsBLL = productsBLL;
+            _service = service;
 
             Products = new ObservableCollection<ProductQueryDto>();
 
@@ -158,7 +158,7 @@ namespace ProductManagerApp.ViewModels
 
             //数据库 → DAL → BLL → List<Product>
 
-            var list = _productsBLL.GetAllProducts();
+            var list = _service.GetAllProducts();
 
             foreach (var product in list)
             {
@@ -309,7 +309,7 @@ namespace ProductManagerApp.ViewModels
                     Description = Description
                 };
 
-                _productsBLL.UpdateProduct(dto);
+                _service.UpdateProduct(dto);
 
                 StatusMessage = "更新成功！";
                 LoadProducts();
@@ -350,7 +350,7 @@ namespace ProductManagerApp.ViewModels
 
             try
             {
-                _productsBLL.DeleteProduct(ProductToDelete.Id);
+                _service.DeleteProduct(ProductToDelete.Id);
 
                 StatusMessage = $"已删除商品:{ProductToDelete.Name}";
                 LoadProducts();
@@ -427,7 +427,7 @@ namespace ProductManagerApp.ViewModels
                 };
 
                 //3.交给BLL（唯一的业务裁判）
-                _productsBLL.AddProduct(dto);
+                _service.AddProduct(dto);
 
 
                 //4.提示成功

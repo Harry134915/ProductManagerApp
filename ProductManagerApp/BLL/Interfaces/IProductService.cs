@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductManagerApp.BLL
+namespace ProductManagerApp.BLL.Interfaces
 {
-    public interface IProductBLL
+    public interface IProductService
     {
         //查询
         List<ProductQueryDto> GetAllProducts();

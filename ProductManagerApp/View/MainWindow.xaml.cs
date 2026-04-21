@@ -5,12 +5,12 @@ namespace ProductManagerApp.Views
 {
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(MainWindowViewModel vm)
         {
             InitializeComponent();
 
             // 设置 ViewModel 为 DataContext
-            //DataContext = new MainWindowViewModel();
+            DataContext = vm;
         }
     }
 }
