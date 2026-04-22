@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="ProductManagerApp.Views.DeleteConfirmView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ProductManagerApp.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <!-- DataContext = DeleteConfirmViewModel，直接绑 IsVisible / Target -->
+    <Border Background="#FFFDECEA" BorderBrush="Red" BorderThickness="1"
+            CornerRadius="6" Padding="10" Margin="0,5,0,0"
+            Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Text="确定要删除商品：" Foreground="DarkRed"/>
+            <TextBlock Text="{Binding Target.Name}" FontWeight="Bold"
+                       Foreground="DarkRed" Margin="5,0"/>
+
+            <Button Content="确认删除" Margin="10,0"
+                    Command="{Binding DataContext.ConfirmDeleteCommand,
+                              RelativeSource={RelativeSource AncestorType=Window}}"/>
+
+            <Button Content="取消" Margin="5,0"
+                    Command="{Binding DataContext.CancelDeleteCommand,
+                              RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

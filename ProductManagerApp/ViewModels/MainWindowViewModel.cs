@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using ProductManagerApp.Infrastructure.Commands;
 
 
 namespace ProductManagerApp.ViewModels
@@ -12,202 +13,12 @@ namespace ProductManagerApp.ViewModels
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         private readonly IProductService _service;
-
         public event PropertyChangedEventHandler PropertyChanged;
-        public MainWindowViewModel(IProductService service)
-        {
-            _service = service;
 
-            Products = new ObservableCollection<ProductQueryDto>();
-
-            // 初始化命令
-            AddCommand = new RelayCommand
-                (
-                _ => AddProduct(),
-                _ => CanAddExecute()
-                );
-
-            RefreshCommand = new RelayCommand
-                (
-                _ => Refresh(),
-                _ => !IsRefreshing
-                );
-            //刷新的时候，按钮自动灰掉
-
-            UpdateCommand = new RelayCommand
-                (
-                _ => UpdateProduct(),
-                _ => CanUpdateExecute()
-                );
-
-            DeleteCommand = new RelayCommand
-                (
-                _ => DeleteProduct(),
-                _ => SelectedProduct != null
-                );
-
-            ConfirmDeleteCommand = new RelayCommand
-                (
-                _ => ConfirmDelete(),
-                _ => ProductToDelete != null
-                );
-
-            CancelDeleteCommand = new RelayCommand
-                (
-                _ => CancelDelete(),
-                _ => IsDeleteConfirmVisible
-                );
-
-            // 启动加载
-            LoadProducts();
-        }
-
-        // ============================================================
-        // 绑定到 UI 的属性
-        // ============================================================
-
-
-        //   输入框变化
-        //→ 属性 setter
-        //→ CanExecute 重新评估
-        //→ 按钮自动灰 / 亮
-
-        private string? _code;
-        public string? Code
-        {
-            get => _code;
-            set
-            {
-                _code = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        private string? _name;
-        public string? Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        private string? _price;
-        public string? Price
-        {
-            get => _price;
-            set
-            {
-                _price = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        private string? _stock;
-        public string? Stock
-        {
-            get => _stock;
-            set
-            {
-                _stock = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        private string? _description;
-        public string? Description
-        {
-            get => _description;
-            set
-            {
-                _description = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        //增加一个错误提示属性（抛弃MessageBox）
-        private string _errorMessage;
-        public string ErrorMessage
-        {
-            get => _errorMessage;
-            set
-            {
-                _errorMessage = value;
-                OnPropertyChanged();
-            }
-        }
-
-        // 商品列表（绑定 DataGrid）
-        public ObservableCollection<ProductQueryDto> Products { get; set; }
-
-
-        // ============================================================
-        // 加载商品（只拿Product）
-        // ============================================================
-
-        private void LoadProducts()
-        {
-            Products.Clear();
-
-            //数据库 → DAL → BLL → List<Product>
-
-            var list = _service.GetAllProducts();
-
-            foreach (var product in list)
-            {
-                Products.Add(product);
-            }
-        }
-
-        // ============================================================
-        // 刷新UX
-        // ============================================================
-        private bool _isRefreshing;
-        public bool IsRefreshing
-        {
-            get => _isRefreshing;
-            set
-            {
-                _isRefreshing = value;
-                OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        // ============================================================
-        // 删除确认状态
-        // ============================================================
-        private bool _isDeleteConfirmVisible;
-        public bool IsDeleteConfirmVisible
-        {
-            get => _isDeleteConfirmVisible;
-            set
-            {
-                _isDeleteConfirmVisible = value;
-                OnPropertyChanged();
-            }
-        }
-
-        // ============================================================
-        // 待确认删除的商品
-        // ============================================================
-        private ProductQueryDto _productToDelete;
-        public ProductQueryDto ProductToDelete
-        {
-            get => _productToDelete;
-            set
-            {
-                _productToDelete = value;
-                OnPropertyChanged();
-            }
-        }
+        // 子 ViewModel
+        public ProductListViewModel List { get; }
+        public ProductFormViewModel Form { get; }
+        public DeleteConfirmViewModel DeleteConfirm { get; }
 
         private string _statusMessage;
         public string StatusMessage
@@ -219,361 +30,160 @@ namespace ProductManagerApp.ViewModels
                 OnPropertyChanged();
             }
         }
+        private string _errorMessage;
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set
+            {
+                _errorMessage = value;
+                OnPropertyChanged();
+            }
+        }
 
-        // ============================================================
-        // 一个刷新的方法
-        // ============================================================
+        // 命令还是在这里统一定义
+        public ICommand AddCommand { get; }
+        public ICommand UpdateCommand { get; }
+        public ICommand DeleteCommand { get; }
+        public ICommand ConfirmDeleteCommand { get; }
+        public ICommand CancelDeleteCommand { get; }
+        public ICommand RefreshCommand { get; }
+
+        public MainWindowViewModel(IProductService service)
+        {
+            _service = service;
+            List = new ProductListViewModel(service);
+            Form = new ProductFormViewModel();
+            DeleteConfirm = new DeleteConfirmViewModel();
+
+            List.SelectedProductChanged += product =>
+            {
+                if (product != null) Form.FillFrom(product);
+            };
+
+            AddCommand = new RelayCommand(
+                _ => AddProduct(),
+                _ => Form.CanAdd()
+            );
+
+            RefreshCommand = new RelayCommand(
+                _ => Refresh(),
+                _ => !List.IsRefreshing
+            );
+
+            UpdateCommand = new RelayCommand(
+                _ => UpdateProduct(),
+                _ => Form.CanUpdate(List.SelectedProduct != null)
+            );
+
+            DeleteCommand = new RelayCommand(
+                _ => DeleteProduct(),
+                _ => List.SelectedProduct != null
+            );
+
+            ConfirmDeleteCommand = new RelayCommand(
+                _ => ConfirmDelete(),
+                _ => DeleteConfirm.Target != null
+            );
+
+            CancelDeleteCommand = new RelayCommand(
+                _ => CancelDelete(),
+                _ => DeleteConfirm.IsVisible
+            );
+
+            List.Load();
+        }
+
         private void Refresh()
         {
             try
             {
-                _isRefreshing = true;
+                List.IsRefreshing = true;
                 StatusMessage = "正在刷新商品列表...";
-
-                LoadProducts();
-
-                StatusMessage = $"刷新完成，共{Products.Count}条商品";
+                List.Load();
+                StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
             }
-
             catch (Exception)
             {
                 StatusMessage = "刷新失败，请稍后再试！";
             }
-
             finally
             {
-                IsRefreshing = false;
+                List.IsRefreshing = false;
             }
         }
 
-        // ============================================================
-        // 选中商品，为商品的更新和删除做准备
-        // ============================================================
-        private ProductQueryDto _selectedProduct;
-        public ProductQueryDto SelectedProduct
-        {
-            get => _selectedProduct;
-            set
-            {
-                _selectedProduct = value;
-                OnPropertyChanged();
-
-                if (_selectedProduct != null)
-                {
-                    Code = _selectedProduct.Code;
-                    Name = _selectedProduct.Name;
-                    Price = _selectedProduct.Price.ToString();
-                    Stock = _selectedProduct.Stock.ToString();
-                    Description = _selectedProduct.Description;
-                }
-
-                //选中变化，按钮状态重新评估
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        // ============================================================
-        // 更新商品
-        // ============================================================
-        private void UpdateProduct()
-        {
-            if (SelectedProduct == null)
-            {
-                ErrorMessage = "请选择要更新的商品！";
-                return;
-            }
-
-            try
-            {
-                ErrorMessage = string.Empty;
-
-                if (!decimal.TryParse(Price, out decimal price))
-                {
-                    ErrorMessage = "价格格式不正确！";
-                    return;
-                }
-
-                if (!int.TryParse(Stock, out int stock))
-                {
-                    ErrorMessage = "库存格式不正确！";
-                    return;
-                }
-
-                var dto = new ProductUpdateDto
-                {
-                    Id = SelectedProduct.Id,
-                    Code = SelectedProduct.Code,
-                    Name = Name,
-                    Price = price,
-                    Stock = stock,
-                    Description = Description
-                };
-
-                _service.UpdateProduct(dto);
-
-                StatusMessage = "更新成功！";
-                LoadProducts();
-                ClearInputs();
-            }
-            catch (ProductValidationException ex)
-            {
-                ErrorMessage = ex.Message;
-            }
-            catch (Exception)
-            {
-                ErrorMessage = "系统异常，请稍后再试！";
-            }
-        }
-
-
-        // ============================================================
-        // 删除商品
-        // ============================================================
-        private void DeleteProduct()
-        {
-            if (SelectedProduct == null)
-            {
-                return;
-            }
-
-            ProductToDelete = SelectedProduct;
-            IsDeleteConfirmVisible = true;
-        }
-
-        // ============================================================
-        // 删除的真正逻辑
-        // ============================================================
-        private void ConfirmDelete()
-        {
-            if (ProductToDelete == null)
-                return;
-
-            try
-            {
-                _service.DeleteProduct(ProductToDelete.Id);
-
-                StatusMessage = $"已删除商品:{ProductToDelete.Name}";
-                LoadProducts();
-                //清除输入框
-                ClearInputs();
-            }
-
-            catch (ProductValidationException ex)
-            {
-                StatusMessage = ex.Message;
-            }
-
-            catch (Exception)
-            {
-                StatusMessage = "删除失败，请稍后再试！";
-            }
-
-            finally
-            {
-                ProductToDelete = null;
-                IsDeleteConfirmVisible = false;
-            }
-        }
-
-        // ============================================================
-        // 取消删除
-        // ============================================================
-        private void CancelDelete()
-        {
-            ProductToDelete = null;
-            IsDeleteConfirmVisible = false;
-        }
-
-        // ============================================================
-        // 添加商品
-        // ============================================================
-
-        //不关心 UI
-        //不关心怎么提示
-        //只关心业务能不能继续
         private void AddProduct()
         {
             try
             {
                 ErrorMessage = string.Empty;
+                _service.AddProduct(Form.ToCreateDto());
+                StatusMessage = "添加成功！";
+                List.Load();
+                Form.Clear();
+            }
+            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (Exception) { ErrorMessage = "系统异常，请稍后再试！"; }
+        }
 
-                //1.字符串 -> 类型（仅格式）
-                if (!int.TryParse(Code, out int code))
+        private void UpdateProduct()
+        {
+            try
+            {
+                ErrorMessage = string.Empty;
+                var dto = new ProductUpdateDto
                 {
-                    ErrorMessage = "商品编码格式不正确！";
-                    return;
-                }
-
-                if (!decimal.TryParse(Price, out decimal price))
-                {
-                    ErrorMessage = "价格格式不正确！";
-                    return;
-                }
-
-                if (!int.TryParse(Stock, out int stock))
-                {
-                    ErrorMessage = "库存格式不正确！";
-                    return;
-                }
-
-                //2.构造实体（不做业务判断）
-                var dto = new ProductCreateDto
-                {
-                    Code = Code,
-                    Name = Name,
-                    Price = price,
-                    Stock = stock,
-                    Description = Description
+                    Id = List.SelectedProduct.Id,
+                    Code = List.SelectedProduct.Code,
+                    Name = Form.Name,
+                    Price = decimal.Parse(Form.Price),
+                    Stock = int.Parse(Form.Stock),
+                    Description = Form.Description
                 };
-
-                //3.交给BLL（唯一的业务裁判）
-                _service.AddProduct(dto);
-
-
-                //4.提示成功
-                //抛弃MessageBox
-                //System.Windows.MessageBox.Show("添加成功！");
-                ErrorMessage = "添加成功！";
-                LoadProducts();
-                ClearInputs();
+                _service.UpdateProduct(dto);
+                StatusMessage = "更新成功！";
+                List.Load();
+                Form.Clear();
             }
+            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (Exception) { ErrorMessage = "系统异常，请稍后再试！"; }
+        }
 
-            catch (ProductValidationException ex)
+        private void DeleteProduct()
+        {
+            if (List.SelectedProduct == null) return;
+
+            DeleteConfirm.Show(List.SelectedProduct);
+        }
+
+        private void ConfirmDelete()
+        {
+            if (DeleteConfirm.Target == null) return;
+
+            try
             {
-                //业务异常（价格为负，库存非法等等）
-                ErrorMessage = ex.Message;
+                _service.DeleteProduct(DeleteConfirm.Target.Id);
+                StatusMessage = $"已删除商品：{DeleteConfirm.Target.Name}";
+                List.Load();
+                Form.Clear();
             }
-
-            catch (Exception ex)
+            catch (ProductValidationException ex) { StatusMessage = ex.Message; }
+            catch (Exception) { StatusMessage = "删除失败，请稍后再试！"; }
+            finally
             {
-                //系统异常，防闪退
-                ErrorMessage = "系统异常，请稍后再试！";
-                //TODO:写日志
+                DeleteConfirm.Hide();
             }
         }
 
-        private void ClearInputs()
+        private void CancelDelete()
         {
-            // 清空输入框
-            Code = "";
-            Name = "";
-            Price = "";
-            Stock = "";
-            Description = "";
+            DeleteConfirm.Hide();
         }
-
-        //CanAddExecute方法，只判断，不弹窗，逻辑与IsValid一致
-        //不判断：价格是否 > 0，库存是否为负，描述是否合法
-        //不提示
-        //不改状态
-        //只回答一个问题：“现在能不能点？”
-        //这正是 CanExecute 的唯一职责。
-        private bool CanAddExecute()
-        {
-            if (string.IsNullOrWhiteSpace(Code))
-                return false;
-            if (!int.TryParse(Code, out _))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Name))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Price))
-                return false;
-
-            if (!decimal.TryParse(Price, out _))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Stock))
-                return false;
-
-            if (!int.TryParse(Stock, out _))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Description))
-                return false;
-
-            return true;
-        }
-        //out decimal price和out _的区别：前者是点击“添加”按钮，后面需要用到 price
-        //而后者则是CanExecute 判断按钮是否可用，只关心格式是否正确，不需要值
-
-        private bool CanUpdateExecute()
-        {
-            if (SelectedProduct == null)
-                return false;
-
-            if (!int.TryParse(Code, out _))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Name))
-                return false;
-
-            if (!decimal.TryParse(Price, out _))
-                return false;
-
-            if (!int.TryParse(Stock, out _))
-                return false;
-
-            return true;
-        }
-
-
-        // ============================================================
-        // 命令（绑定按钮）
-        // ============================================================
-
-        public ICommand AddCommand { get; }
-        public ICommand RefreshCommand { get; }
-        public ICommand UpdateCommand { get; }
-        public ICommand DeleteCommand { get; }
-        public ICommand ConfirmDeleteCommand { get; }
-        public ICommand CancelDeleteCommand { get; }
-
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-    }
-
-
-    // ============================================================
-    // 简易命令类（RelayCommand）
-    // ============================================================
-
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object> _execute;
-        private readonly Func<object, bool> _canExecute;
-
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-        //人话:“创建一个命令的时候，
-        //你必须告诉我‘点了要干什么’，
-        //但你可以选择要不要告诉我‘什么时候能点’。”
-
-        public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
-        //这里的null表示:如果你没告诉我规则（null）
-        //那我默认“随时都能点”
-        //如果你告诉我规则
-        //那我就按你给的规则判断
-        public void Execute(object parameter) => _execute(parameter);
-        //人话:“当有人让我执行命令时，
-        //我就去调用之前你交给我的那个方法。”
-
-        public event EventHandler CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
-
-        //value 具体指的是：
-        //WPF 在为每一个绑定了 Command 的 Button 创建的、
-        //用来在 CommandManager.RequerySuggested 触发时
-        //重新调用对应命令的 CanExecute() 并更新按钮状态的那个内部方法。
     }
 }

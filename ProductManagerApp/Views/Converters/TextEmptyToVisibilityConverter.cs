@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace ProductManagerApp.View.Converters
+namespace ProductManagerApp.Views.Converters
 {
     public class TextEmptyToVisibilityConverter : IMultiValueConverter
     {

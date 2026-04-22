@@ -80,7 +80,7 @@ namespace ProductManagerApp.DAL
         // =======================================================
         public int DeleteProduct(int productId)
         {
-            string sql = "DELETE FROM products WHERE id=@id";
+            string sql = "DELETE FROM products WHERE id=@Id";
 
             using var conn = _dbProvider.CreateConnection();
             return conn.Execute(sql, new { Id = productId });
