@@ -5,6 +5,7 @@
         xmlns:views="clr-namespace:ProductManagerApp.Views"
         Title="商品管理系统" Height="600" Width="900"
         Background="#F5F6FA"
+        Icon="/Assets/Idol.jpg"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>

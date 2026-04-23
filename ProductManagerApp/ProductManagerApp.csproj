@@ -6,12 +6,25 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
+		<ApplicationIcon>src=http___inews_32x32.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Assets\Idol.jpg" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="src=http___inews_32x32.ico" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Dapper" Version="2.1.72" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.6" />
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Assets\Idol.jpg" />
 	</ItemGroup>
 
 	<ItemGroup>
