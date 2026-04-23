@@ -3,7 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ProductManagerApp.Views.Converters"
         xmlns:views="clr-namespace:ProductManagerApp.Views"
-        Title="商品管理系统" Height="450" Width="700">
+        Title="商品管理系统" Height="600" Width="900"
+        Background="#F5F6FA"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter"/>
+    </Window.Resources>
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -17,9 +23,24 @@
         <views:DeleteConfirmView  Grid.Row="1" DataContext="{Binding DeleteConfirm}" />
 
         <!-- 状态提示留在主窗口，因为是全局的 -->
-        <StackPanel Grid.Row="2">
-            <TextBlock Text="{Binding ErrorMessage}"  Foreground="Red"    Margin="0,5,0,0"/>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="SkyBlue" Margin="0,5,0,0"/>
+        <StackPanel Grid.Row="2" Margin="0,6,0,0">
+            <Border Background="#FEF0F0" BorderBrush="#FBC4C4" BorderThickness="1"
+            CornerRadius="4" Padding="10,7" Margin="0,0,0,4"
+            Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="✕  " Foreground="#F56C6C" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#F56C6C" FontSize="13"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#F0F9EB" BorderBrush="#B3E19D" BorderThickness="1"
+            CornerRadius="4" Padding="10,7"
+            Visibility="{Binding StatusMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="✓  " Foreground="#67C23A" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#67C23A" FontSize="13"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <views:ProductListView    Grid.Row="3" DataContext="{Binding List}" />

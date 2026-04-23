@@ -1,19 +1,20 @@
 ﻿using ProductManagerApp.BLL.Exceptions;
 using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.DTO;
-using System.Collections.ObjectModel;
+using ProductManagerApp.Infrastructure.Commands;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using ProductManagerApp.Infrastructure.Commands;
 
 
 namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
+        private System.Threading.Timer _statusTimer;
         private readonly IProductService _service;
         public event PropertyChangedEventHandler PropertyChanged;
+
 
         // 子 ViewModel
         public ProductListViewModel List { get; }
@@ -28,6 +29,19 @@ namespace ProductManagerApp.ViewModels
             {
                 _statusMessage = value;
                 OnPropertyChanged();
+
+                // 有内容时启动计时器，2秒后自动清空
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _statusTimer?.Dispose();
+                    _statusTimer = new System.Threading.Timer(_ =>
+                    {
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            StatusMessage = string.Empty;
+                        });
+                    }, null, 2000, System.Threading.Timeout.Infinite);
+                }
             }
         }
         private string _errorMessage;

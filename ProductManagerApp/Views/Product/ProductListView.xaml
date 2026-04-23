@@ -1,25 +1,70 @@
 ﻿<UserControl x:Class="ProductManagerApp.Views.ProductListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:ProductManagerApp.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <!-- DataContext = ProductListViewModel，直接绑 Products / SelectedProduct -->
-    <DataGrid ItemsSource="{Binding Products}"
-              SelectedItem="{Binding SelectedProduct}"
-              AutoGenerateColumns="False"
-              IsReadOnly="True"
-              SelectionMode="Single"
-              Margin="0,10,0,0">
-        <DataGrid.Columns>
-            <DataGridTextColumn Header="ID"     Binding="{Binding Id}"          Width="50"/>
-            <DataGridTextColumn Header="商品编码" Binding="{Binding Code}"        Width="100"/>
-            <DataGridTextColumn Header="商品名称" Binding="{Binding Name}"        Width="*"/>
-            <DataGridTextColumn Header="价格"   Binding="{Binding Price}"        Width="100"/>
-            <DataGridTextColumn Header="库存"   Binding="{Binding Stock}"        Width="80"/>
-            <DataGridTextColumn Header="描述"   Binding="{Binding Description}"  Width="2*"/>
-        </DataGrid.Columns>
-    </DataGrid>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Border Background="White" CornerRadius="6"
+            BorderBrush="#EBEEF5" BorderThickness="1" Margin="0,8,0,0">
+        <DataGrid ItemsSource="{Binding Products}"
+                  SelectedItem="{Binding SelectedProduct}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#EBEEF5"
+                  BorderThickness="0"
+                  RowHeight="40"
+                  ColumnHeaderHeight="42"
+                  Background="White"
+                  AlternatingRowBackground="#FAFAFA"
+                  SelectionUnit="FullRow">
+
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#F5F7FA"/>
+                    <Setter Property="Foreground" Value="#909399"/>
+                    <Setter Property="FontSize" Value="13"/>
+                    <Setter Property="Padding" Value="12,0"/>
+                    <Setter Property="BorderBrush" Value="#EBEEF5"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="12,0"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Foreground" Value="#606266"/>
+                    <Setter Property="FontSize" Value="13"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#ECF5FF"/>
+                            <Setter Property="Foreground" Value="#409EFF"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#ECF5FF"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#F5F7FA"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID"     Binding="{Binding Id}"          Width="*"/>
+                <DataGridTextColumn Header="商品编码" Binding="{Binding Code}"        Width="*"/>
+                <DataGridTextColumn Header="商品名称" Binding="{Binding Name}"        Width="*"/>
+                <DataGridTextColumn Header="价格"   Binding="{Binding Price}"        Width="*"/>
+                <DataGridTextColumn Header="库存"   Binding="{Binding Stock}"        Width="*"/>
+                <DataGridTextColumn Header="描述"   Binding="{Binding Description}"  Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Border>
 </UserControl>
