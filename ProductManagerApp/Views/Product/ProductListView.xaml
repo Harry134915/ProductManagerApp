@@ -26,6 +26,7 @@
                     <Setter Property="Padding" Value="12,0"/>
                     <Setter Property="BorderBrush" Value="#EBEEF5"/>
                     <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
                 </Style>
             </DataGrid.ColumnHeaderStyle>
 
@@ -35,6 +36,19 @@
                     <Setter Property="BorderThickness" Value="0"/>
                     <Setter Property="Foreground" Value="#606266"/>
                     <Setter Property="FontSize" Value="13"/>
+
+                    <!-- 修正头部字段与每一列数据对齐 -->
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="#ECF5FF"/>
