@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace ProductManagerApp.DTO
+﻿namespace ProductManagerApp.DTO
 {
     /// <summary>
-    /// UI → BLL 用的数据对象（新增商品）
-    /// 不包含 Id
-    /// 不包含任何业务逻辑
+    /// 商品创建数据传输对象（DTO）
+    /// 用于新增商品时在各层之间传递数据（如 UI → Service → DAL）
+    /// 仅承载数据，不包含任何业务逻辑或行为
     /// </summary>
     public class ProductCreateDto
     {

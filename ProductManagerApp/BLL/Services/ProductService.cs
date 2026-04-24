@@ -1,12 +1,8 @@
-﻿using ProductManagerApp.BLL.Exceptions;
-using ProductManagerApp.DAL;
-using ProductManagerApp.Entity;
-using ProductManagerApp.DTO;
-using System;
-using System.Collections.Generic;
-using ProductManagerApp.BLL.Interfaces;
-using ProductManagerApp.BLL.Validators;
+﻿using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.BLL.Mappers;
+using ProductManagerApp.BLL.Validators;
+using ProductManagerApp.DAL;
+using ProductManagerApp.DTO;
 
 namespace ProductManagerApp.BLL.Services
 {
@@ -39,7 +35,7 @@ namespace ProductManagerApp.BLL.Services
         // ============================================================
         public void AddProduct(ProductCreateDto dto)
         {
-            //1.防御性编程(DTO本身不可为空)
+            //1.DTO本身不可为空
             //if (dto == null)
             //    throw new ArgumentNullException(nameof(dto));
 
@@ -51,7 +47,7 @@ namespace ProductManagerApp.BLL.Services
             //3.业务校验(只认Entity)
             _validator.Validate(entity);
 
-            //4.通过校验，允许调dal
+            //4.通过校验，允许调DAL进行数据库操作
             _repo.AddProduct(entity);
         }
 
@@ -69,10 +65,6 @@ namespace ProductManagerApp.BLL.Services
             _validator.Validate(entity);
 
             _repo.UpdateProduct(entity);
-
-            //nameof 是 C# 的一个编译期关键字，将“代码里的名字”，安全地变成“字符串”
-            //你可以调用我，但前提是 product 不能为空
-            //如果你违反契约，我会立刻报错
         }
 
         // ============================================================

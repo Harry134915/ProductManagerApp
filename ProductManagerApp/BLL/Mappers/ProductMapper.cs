@@ -1,11 +1,5 @@
 ﻿using ProductManagerApp.DTO;
 using ProductManagerApp.Entity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProductManagerApp.BLL.Mappers
 {
@@ -37,6 +31,10 @@ namespace ProductManagerApp.BLL.Mappers
                 Description = dto.Description
             };
         }
+
+        /// <summary>
+        /// Entity -> DTO
+        /// </summary>
         public static ProductQueryDto ToQueryDto(Product product)
         {
             return new ProductQueryDto
