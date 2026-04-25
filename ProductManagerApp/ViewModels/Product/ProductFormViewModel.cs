@@ -1,4 +1,5 @@
-﻿using ProductManagerApp.DTO;
+﻿using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.DTO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -132,24 +133,63 @@ namespace ProductManagerApp.ViewModels
             return true;
         }
 
-        //构建DTO(格式转换，业务校验仍在BLL)
-        public ProductCreateDto ToCreateDto() => new()
+        /// <summary>
+        /// 构建增加商品的 DTO 对象
+        /// </summary>
+        /// <param name="ToCreateDto">构建增加商品的 DTO 对象</param>
+        public ProductCreateDto ToCreateDto()
         {
-            Code = Code!,
-            Name = Name!,
-            Price = decimal.Parse(Price!),
-            Stock = int.Parse(Stock!),
-            Description = Description!
-        };
+            if (string.IsNullOrWhiteSpace(Code))
+                throw new ProductValidationException("编码不能为空!");
+            if (string.IsNullOrWhiteSpace(Name))
+                throw new ProductValidationException("名称不能为空!");
+            if (!decimal.TryParse(Price, out var price))
+                throw new ProductValidationException("价格格式错误!");
+            if (!int.TryParse(Stock, out var stock))
+                throw new ProductValidationException("库存格式错误!");
+
+            return new ProductCreateDto
+            {
+                Code = Code,
+                Name = Name,
+                Price = price,
+                Stock = stock,
+                Description = Description
+            };
+        }
+
+        public ProductUpdateDto ToUpdateDto(ProductQueryDto selected)
+        {
+            if (selected == null)
+                throw new ArgumentException(nameof(selected));
+
+            if (!decimal.TryParse(Price, out var price))
+                throw new ProductValidationException("价格格式错误!");
+            if (!int.TryParse(Stock, out var stock))
+                throw new ProductValidationException("库存格式错误!");
+
+            return new ProductUpdateDto
+            {
+                Id = selected.Id,
+                Code = selected.Code,
+                Name = Name,
+                Price = price,
+                Stock = stock,
+                Description = Description
+            };
+        }
 
         //把选中商品填入表单
         public void FillFrom(ProductQueryDto dto)
         {
-            Code = dto.Code;
-            Name = dto.Name;
+            if (dto == null)
+                return;
+
+            Code = dto.Code ?? string.Empty;
+            Name = dto.Name ?? string.Empty;
             Price = dto.Price.ToString();
             Stock = dto.Stock.ToString();
-            Description = dto.Description;
+            Description = dto.Description ?? string.Empty;
         }
         public void Clear()
         {

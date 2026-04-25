@@ -5,13 +5,14 @@ using ProductManagerApp.Infrastructure.Commands;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 
 namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private System.Threading.Timer _statusTimer;
+        private DispatcherTimer _statusTimer;
         private readonly IProductService _service;
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -27,23 +28,25 @@ namespace ProductManagerApp.ViewModels
             get => _statusMessage;
             set
             {
+                // 避免重复设置同样的消息，导致计时器重置
+                if (_statusMessage == value)
+                    return;
+
                 _statusMessage = value;
                 OnPropertyChanged();
 
                 // 有内容时启动计时器，2秒后自动清空
-                if (!string.IsNullOrEmpty(value))
+                // 如果消息为空，则立即停止计时器并清空状态
+                if (string.IsNullOrEmpty(value))
                 {
-                    _statusTimer?.Dispose();
-                    _statusTimer = new System.Threading.Timer(_ =>
-                    {
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            StatusMessage = string.Empty;
-                        });
-                    }, null, 2000, System.Threading.Timeout.Infinite);
+                    _statusTimer?.Stop();
+                    return;
                 }
+
+                StartStatusClearTimer();
             }
         }
+
         private string _errorMessage;
         public string ErrorMessage
         {
@@ -72,7 +75,11 @@ namespace ProductManagerApp.ViewModels
 
             List.SelectedProductChanged += product =>
             {
-                if (product != null) Form.FillFrom(product);
+                if (product != null)
+                {
+                    Form.FillFrom(product);
+                    CommandManager.InvalidateRequerySuggested();
+                }
             };
 
             AddCommand = new RelayCommand(
@@ -132,6 +139,7 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 ErrorMessage = string.Empty;
+
                 _service.AddProduct(Form.ToCreateDto());
                 StatusMessage = "添加成功！";
                 List.Load();
@@ -146,16 +154,8 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 ErrorMessage = string.Empty;
-                var dto = new ProductUpdateDto
-                {
-                    Id = List.SelectedProduct.Id,
-                    Code = List.SelectedProduct.Code,
-                    Name = Form.Name,
-                    Price = decimal.Parse(Form.Price),
-                    Stock = int.Parse(Form.Stock),
-                    Description = Form.Description
-                };
-                _service.UpdateProduct(dto);
+
+                _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct));
                 StatusMessage = "更新成功！";
                 List.Load();
                 Form.Clear();
@@ -182,8 +182,8 @@ namespace ProductManagerApp.ViewModels
                 List.Load();
                 Form.Clear();
             }
-            catch (ProductValidationException ex) { StatusMessage = ex.Message; }
-            catch (Exception) { StatusMessage = "删除失败，请稍后再试！"; }
+            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (Exception) { ErrorMessage = "删除失败，请稍后再试！"; }
             finally
             {
                 DeleteConfirm.Hide();
@@ -193,6 +193,26 @@ namespace ProductManagerApp.ViewModels
         private void CancelDelete()
         {
             DeleteConfirm.Hide();
+        }
+
+        private void StartStatusClearTimer()
+        {
+            if (_statusTimer == null)
+            {
+                _statusTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(2)
+                };
+
+                _statusTimer.Tick += (s, e) =>
+                 {
+                     _statusTimer.Stop();
+                     StatusMessage = string.Empty;
+                 };
+            }
+
+            _statusTimer.Stop();// 重置计时器
+            _statusTimer.Start();
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
