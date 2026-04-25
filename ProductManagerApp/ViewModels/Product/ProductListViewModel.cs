@@ -54,14 +54,20 @@ namespace ProductManagerApp.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        public void Load()
+        public async Task LoadAsync()
         {
             IsRefreshing = true;
             try
             {
+                //在后台线程调用同步接口
+                var data = await Task.Run(() => _service.GetAllProducts());
+
+                //回到UI线程更新集合
                 Products.Clear();
-                foreach (var p in _service.GetAllProducts())
+                foreach (var p in data)
+                {
                     Products.Add(p);
+                }
             }
             finally
             {

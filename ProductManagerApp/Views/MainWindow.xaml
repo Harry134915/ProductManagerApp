@@ -47,7 +47,3 @@
         <views:ProductListView    Grid.Row="3" DataContext="{Binding List}" />
     </Grid>
 </Window>
-
-
-
-

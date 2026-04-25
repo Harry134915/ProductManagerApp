@@ -82,18 +82,21 @@ namespace ProductManagerApp.ViewModels
                 }
             };
 
+
+            // RelayCommand 接收的是 Action<object>，
+            // 异步方法需要以 async _ => await Method() 的形式调用
             AddCommand = new RelayCommand(
-                _ => AddProduct(),
+                async _ => await AddProduct(),
                 _ => Form.CanAdd()
             );
 
             RefreshCommand = new RelayCommand(
-                _ => Refresh(),
+                async _ => await Refresh(),
                 _ => !List.IsRefreshing
             );
 
             UpdateCommand = new RelayCommand(
-                _ => UpdateProduct(),
+                async _ => await UpdateProduct(),
                 _ => Form.CanUpdate(List.SelectedProduct != null)
             );
 
@@ -103,7 +106,7 @@ namespace ProductManagerApp.ViewModels
             );
 
             ConfirmDeleteCommand = new RelayCommand(
-                _ => ConfirmDelete(),
+                async _ => await ConfirmDelete(),
                 _ => DeleteConfirm.Target != null
             );
 
@@ -112,16 +115,17 @@ namespace ProductManagerApp.ViewModels
                 _ => DeleteConfirm.IsVisible
             );
 
-            List.Load();
+            //异步加载数据，避免界面卡顿
+            _ = List.LoadAsync();
         }
 
-        private void Refresh()
+        private async Task Refresh()
         {
             try
             {
                 List.IsRefreshing = true;
                 StatusMessage = "正在刷新商品列表...";
-                List.Load();
+                await List.LoadAsync();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
             }
             catch (Exception)
@@ -134,30 +138,30 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
-        private void AddProduct()
+        private async Task AddProduct()
         {
             try
             {
                 ErrorMessage = string.Empty;
 
-                _service.AddProduct(Form.ToCreateDto());
+                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()));
                 StatusMessage = "添加成功！";
-                List.Load();
+                await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
             catch (Exception) { ErrorMessage = "系统异常，请稍后再试！"; }
         }
 
-        private void UpdateProduct()
+        private async Task UpdateProduct()
         {
             try
             {
                 ErrorMessage = string.Empty;
 
-                _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct));
+                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)));
                 StatusMessage = "更新成功！";
-                List.Load();
+                await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
@@ -171,15 +175,17 @@ namespace ProductManagerApp.ViewModels
             DeleteConfirm.Show(List.SelectedProduct);
         }
 
-        private void ConfirmDelete()
+        private async Task ConfirmDelete()
         {
-            if (DeleteConfirm.Target == null) return;
+            var target = DeleteConfirm.Target;
+            if (target == null) return;
 
             try
             {
-                _service.DeleteProduct(DeleteConfirm.Target.Id);
-                StatusMessage = $"已删除商品：{DeleteConfirm.Target.Name}";
-                List.Load();
+                //异步删除，避免界面卡顿
+                await Task.Run(() => _service.DeleteProduct(target.Id));
+                StatusMessage = $"已删除商品：{target.Name}";
+                await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
@@ -193,6 +199,7 @@ namespace ProductManagerApp.ViewModels
         private void CancelDelete()
         {
             DeleteConfirm.Hide();
+            DeleteConfirm.Target = null; // 清理引用，防止内存泄漏
         }
 
         private void StartStatusClearTimer()
