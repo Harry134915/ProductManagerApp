@@ -12,9 +12,9 @@ namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private DispatcherTimer _statusTimer;
+        private DispatcherTimer? _statusTimer;
         private readonly IProductService _service;
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
 
         // 子 ViewModel
@@ -22,8 +22,8 @@ namespace ProductManagerApp.ViewModels
         public ProductFormViewModel Form { get; }
         public DeleteConfirmViewModel DeleteConfirm { get; }
 
-        private string _statusMessage;
-        public string StatusMessage
+        private string? _statusMessage;
+        public string? StatusMessage
         {
             get => _statusMessage;
             set
@@ -47,8 +47,8 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
-        private string _errorMessage;
-        public string ErrorMessage
+        private string? _errorMessage;
+        public string? ErrorMessage
         {
             get => _errorMessage;
             set
@@ -59,13 +59,12 @@ namespace ProductManagerApp.ViewModels
         }
 
         // 命令还是在这里统一定义
-        public ICommand AddCommand { get; }
-        public ICommand UpdateCommand { get; }
-        public ICommand DeleteCommand { get; }
-        public ICommand ConfirmDeleteCommand { get; }
-        public ICommand CancelDeleteCommand { get; }
-        public ICommand RefreshCommand { get; }
-
+        public RelayCommand AddCommand { get; }
+        public RelayCommand UpdateCommand { get; }
+        public RelayCommand DeleteCommand { get; }
+        public RelayCommand ConfirmDeleteCommand { get; }
+        public RelayCommand CancelDeleteCommand { get; }
+        public RelayCommand RefreshCommand { get; }
         public MainWindowViewModel(IProductService service)
         {
             _service = service;
@@ -73,13 +72,14 @@ namespace ProductManagerApp.ViewModels
             Form = new ProductFormViewModel();
             DeleteConfirm = new DeleteConfirmViewModel();
 
+            List.StateChanged += UpdateAllCommands;
+            Form.StateChanged += UpdateAllCommands;
+            DeleteConfirm.StateChanged += UpdateAllCommands;
+
             List.SelectedProductChanged += product =>
             {
-                if (product != null)
-                {
-                    Form.FillFrom(product);
-                    CommandManager.InvalidateRequerySuggested();
-                }
+                Form.FillFrom(product);
+                UpdateAllCommands();
             };
 
 
@@ -135,6 +135,7 @@ namespace ProductManagerApp.ViewModels
             finally
             {
                 List.IsRefreshing = false;
+                UpdateAllCommands();
             }
         }
 
@@ -158,6 +159,12 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 ErrorMessage = string.Empty;
+
+                if (List.SelectedProduct == null)
+                {
+                    ErrorMessage = "请先选择商品";
+                    return;
+                }
 
                 await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)));
                 StatusMessage = "更新成功！";
@@ -202,6 +209,19 @@ namespace ProductManagerApp.ViewModels
             DeleteConfirm.Target = null; // 清理引用，防止内存泄漏
         }
 
+        //不再使用 WPF 的命令系统自动监控属性变化来更新按钮状态，
+        //手动调用 RaiseCanExecuteChanged 来通知界面重新评估命令的可执行状态。
+        // 每次选中变化后，所有命令的 CanExecute 都需要重新评估
+        private void UpdateAllCommands()
+        {
+            AddCommand?.RaiseCanExecuteChanged();
+            UpdateCommand?.RaiseCanExecuteChanged();
+            DeleteCommand?.RaiseCanExecuteChanged();
+            ConfirmDeleteCommand?.RaiseCanExecuteChanged();
+            CancelDeleteCommand?.RaiseCanExecuteChanged();
+            RefreshCommand?.RaiseCanExecuteChanged();
+        }
+
         private void StartStatusClearTimer()
         {
             if (_statusTimer == null)
@@ -221,8 +241,7 @@ namespace ProductManagerApp.ViewModels
             _statusTimer.Stop();// 重置计时器
             _statusTimer.Start();
         }
-
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

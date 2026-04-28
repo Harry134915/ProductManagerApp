@@ -17,7 +17,9 @@ namespace ProductManagerApp.ViewModels
     public class ProductListViewModel : INotifyPropertyChanged
     {
         private readonly IProductService _service;
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public event Action? StateChanged;
 
         public ProductListViewModel(IProductService service)
         {
@@ -31,26 +33,28 @@ namespace ProductManagerApp.ViewModels
         // ============================================================
         // 选中商品，为商品的更新和删除做准备
         // ============================================================
-        private ProductQueryDto _selectedProduct;
-        public ProductQueryDto SelectedProduct
+        private ProductQueryDto? _selectedProduct;
+        public ProductQueryDto? SelectedProduct
         {
             get => _selectedProduct;
             set
             {
+                if (_selectedProduct == value) return;
+
                 _selectedProduct = value;
                 OnPropertyChanged();
 
                 SelectedProductChanged?.Invoke(value);
 
                 //选中变化，按钮状态重新评估
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();//通知外部刷新命令
             }
         }
 
         // 外部（MainVM）订阅这个事件，做联动
         public event Action<ProductQueryDto?>? SelectedProductChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -72,6 +76,7 @@ namespace ProductManagerApp.ViewModels
             finally
             {
                 IsRefreshing = false;
+                StateChanged?.Invoke();
             }
 
         }
@@ -84,7 +89,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _isRefreshing = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();//通知外部刷新命令状态
             }
         }
     }

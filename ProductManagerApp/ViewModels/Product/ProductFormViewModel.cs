@@ -14,8 +14,10 @@ namespace ProductManagerApp.ViewModels
     public class ProductFormViewModel : INotifyPropertyChanged
     {
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public event Action? StateChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -32,7 +34,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _code = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();
             }
         }
 
@@ -44,7 +46,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _name = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();
             }
         }
 
@@ -56,7 +58,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _price = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();
             }
         }
 
@@ -68,7 +70,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _stock = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();
             }
         }
 
@@ -80,7 +82,7 @@ namespace ProductManagerApp.ViewModels
             {
                 _description = value;
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested();
+                StateChanged?.Invoke();
             }
         }
         public bool CanAdd()
@@ -154,7 +156,7 @@ namespace ProductManagerApp.ViewModels
                 Name = Name,
                 Price = price,
                 Stock = stock,
-                Description = Description
+                Description = Description ?? string.Empty,
             };
         }
 
@@ -163,6 +165,8 @@ namespace ProductManagerApp.ViewModels
             if (selected == null)
                 throw new ArgumentException(nameof(selected));
 
+            if (string.IsNullOrWhiteSpace(Code))
+                throw new ProductValidationException("编码不能为空!");
             if (!decimal.TryParse(Price, out var price))
                 throw new ProductValidationException("价格格式错误!");
             if (!int.TryParse(Stock, out var stock))
@@ -172,15 +176,15 @@ namespace ProductManagerApp.ViewModels
             {
                 Id = selected.Id,
                 Code = selected.Code,
-                Name = Name,
+                Name = Name ?? string.Empty,
                 Price = price,
                 Stock = stock,
-                Description = Description
+                Description = Description ?? string.Empty
             };
         }
 
         //把选中商品填入表单
-        public void FillFrom(ProductQueryDto dto)
+        public void FillFrom(ProductQueryDto? dto)
         {
             if (dto == null)
                 return;

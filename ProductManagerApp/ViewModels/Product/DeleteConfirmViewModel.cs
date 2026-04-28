@@ -11,27 +11,47 @@ namespace ProductManagerApp.ViewModels
 {
     public class DeleteConfirmViewModel : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event Action? StateChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         private bool _isVisible;
         public bool IsVisible
         {
             get => _isVisible;
-            set { _isVisible = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isVisible == value) return;
+
+                _isVisible = value;
+                OnPropertyChanged();
+                StateChanged?.Invoke();
+            }
         }
 
         private ProductQueryDto? _target;
         public ProductQueryDto? Target
         {
             get => _target;
-            set { _target = value; OnPropertyChanged(); }
+            set
+            {
+                if (_target == value) return;
+
+                _target = value;
+                OnPropertyChanged();
+                StateChanged?.Invoke();
+            }
         }
 
         public void Show(ProductQueryDto product)
         {
-            Target = product;
-            IsVisible = true;
+            _target = product;
+            _isVisible = true;
+
+            OnPropertyChanged(nameof(Target));
+            OnPropertyChanged(nameof(IsVisible));
+            StateChanged?.Invoke();
         }
+
 
         public void Hide()
         {
@@ -39,7 +59,7 @@ namespace ProductManagerApp.ViewModels
             IsVisible = false;
         }
 
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
