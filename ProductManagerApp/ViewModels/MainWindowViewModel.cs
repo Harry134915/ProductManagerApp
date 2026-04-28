@@ -1,10 +1,9 @@
 ﻿using ProductManagerApp.BLL.Exceptions;
 using ProductManagerApp.BLL.Interfaces;
-using ProductManagerApp.DTO;
 using ProductManagerApp.Infrastructure.Commands;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using System.Windows.Threading;
 
 
@@ -119,6 +118,17 @@ namespace ProductManagerApp.ViewModels
             _ = List.LoadAsync();
         }
 
+        private CancellationTokenSource? _cts;
+
+        /// <summary>
+        /// 窗口关闭时调用，取消所有正在执行的后台操作
+        /// </summary>
+        public void CancelOperations()
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+        }
+
         private async Task Refresh()
         {
             try
@@ -128,8 +138,9 @@ namespace ProductManagerApp.ViewModels
                 await List.LoadAsync();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine($"刷新失败: {ex}");
                 StatusMessage = "刷新失败，请稍后再试！";
             }
             finally
@@ -144,14 +155,19 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 ErrorMessage = string.Empty;
+                _cts = new CancellationTokenSource();
 
-                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()));
+                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()), _cts.Token);
                 StatusMessage = "添加成功！";
                 await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
-            catch (Exception) { ErrorMessage = "系统异常，请稍后再试！"; }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"添加失败: {ex}");
+                ErrorMessage = "系统异常，请稍后再试！";
+            }
         }
 
         private async Task UpdateProduct()
@@ -166,13 +182,18 @@ namespace ProductManagerApp.ViewModels
                     return;
                 }
 
-                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)));
+                _cts = new CancellationTokenSource();
+                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)), _cts.Token);
                 StatusMessage = "更新成功！";
                 await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
-            catch (Exception) { ErrorMessage = "系统异常，请稍后再试！"; }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"更新失败: {ex}");
+                ErrorMessage = "系统异常，请稍后再试！";
+            }
         }
 
         private void DeleteProduct()
@@ -189,14 +210,20 @@ namespace ProductManagerApp.ViewModels
 
             try
             {
+                _cts = new CancellationTokenSource();
+
                 //异步删除，避免界面卡顿
-                await Task.Run(() => _service.DeleteProduct(target.Id));
+                await Task.Run(() => _service.DeleteProduct(target.Id), _cts.Token);
                 StatusMessage = $"已删除商品：{target.Name}";
                 await List.LoadAsync();
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
-            catch (Exception) { ErrorMessage = "删除失败，请稍后再试！"; }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"删除失败: {ex}");
+                ErrorMessage = "删除失败，请稍后再试！";
+            }
             finally
             {
                 DeleteConfirm.Hide();

@@ -1,4 +1,5 @@
-﻿using ProductManagerApp.BLL.Interfaces;
+﻿using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.BLL.Mappers;
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DAL;
@@ -76,7 +77,9 @@ namespace ProductManagerApp.BLL.Services
 
             _validator.ValidatePrice(newPrice);
 
-            _repo.UpdateProductPrice(productId, newPrice);
+            var affected = _repo.UpdateProductPrice(productId, newPrice);
+            if (affected == 0)
+                throw new ProductValidationException("更新价格失败，未找到对应的商品。");
         }
 
         // ============================================================

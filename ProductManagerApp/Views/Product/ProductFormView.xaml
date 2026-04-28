@@ -5,6 +5,7 @@
 
     <UserControl.Resources>
         <local:TextEmptyToVisibilityConverter x:Key="TextEmptyToVisibilityConverter"/>
+        <local:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
     </UserControl.Resources>
 
     <Border Background="White" CornerRadius="6" Padding="16"
@@ -19,11 +20,16 @@
             <WrapPanel Orientation="Horizontal">
 
                 <!-- 商品编码 -->
+                <!-- 商品编码不可更新 -->
                 <StackPanel Margin="0,0,16,8">
                     <TextBlock Text="商品编码" Foreground="#606266" FontSize="12" Margin="0,0,0,4"/>
                     <Grid>
                         <TextBox x:Name="CodeBox" Width="150"
-                                 Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"/>
+                                    Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
+                                    IsReadOnly="{Binding DataContext.List.SelectedProduct,
+                                    Converter={StaticResource NotNullToBoolConverter},
+                                    RelativeSource={RelativeSource AncestorType=Window}}"/>
+
                         <TextBlock Text="请输入商品编码" Foreground="#C0C4CC"
                                    Margin="8,0,0,0" VerticalAlignment="Center"
                                    IsHitTestVisible="False">

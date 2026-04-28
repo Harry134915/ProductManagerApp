@@ -1,13 +1,7 @@
 ﻿using ProductManagerApp.BLL.Exceptions;
 using ProductManagerApp.DTO;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace ProductManagerApp.ViewModels
 {
@@ -89,8 +83,6 @@ namespace ProductManagerApp.ViewModels
         {
             if (string.IsNullOrWhiteSpace(Code))
                 return false;
-            if (!int.TryParse(Code, out _))
-                return false;
 
             if (string.IsNullOrWhiteSpace(Name))
                 return false;
@@ -107,9 +99,6 @@ namespace ProductManagerApp.ViewModels
             if (!int.TryParse(Stock, out _))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(Description))
-                return false;
-
             return true;
         }
 
@@ -118,9 +107,6 @@ namespace ProductManagerApp.ViewModels
         public bool CanUpdate(bool hasSelected)
         {
             if (!hasSelected)
-                return false;
-
-            if (!int.TryParse(Code, out _))
                 return false;
 
             if (string.IsNullOrWhiteSpace(Name))
