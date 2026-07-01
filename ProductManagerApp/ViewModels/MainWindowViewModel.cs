@@ -65,6 +65,7 @@ namespace ProductManagerApp.ViewModels
         public RelayCommand ConfirmDeleteCommand { get; }
         public RelayCommand CancelDeleteCommand { get; }
         public RelayCommand RefreshCommand { get; }
+        public RelayCommand ClearFormCommand { get; }
         public MainWindowViewModel(IProductService service)
         {
             _service = service;
@@ -87,7 +88,7 @@ namespace ProductManagerApp.ViewModels
             // 异步方法需要以 async _ => await Method() 的形式调用
             AddCommand = new RelayCommand(
                 async _ => await AddProduct(),
-                _ => Form.CanAdd()
+                _ => List.SelectedProduct == null && Form.CanAdd()
             );
 
             RefreshCommand = new RelayCommand(
@@ -113,6 +114,11 @@ namespace ProductManagerApp.ViewModels
             CancelDeleteCommand = new RelayCommand(
                 _ => CancelDelete(),
                 _ => DeleteConfirm.IsVisible
+            );
+
+            ClearFormCommand = new RelayCommand(
+                _ => ClearForm(),
+                _ => List.SelectedProduct != null || Form.HasInput()
             );
 
             //异步加载数据，避免界面卡顿
@@ -258,6 +264,15 @@ namespace ProductManagerApp.ViewModels
             DeleteConfirm.Target = null; // 清理引用，防止内存泄漏
         }
 
+        private void ClearForm()
+        {
+            ErrorMessage = string.Empty;
+            DeleteConfirm.Hide();
+            List.SelectedProduct = null;
+            Form.Clear();
+            UpdateAllCommands();
+        }
+
         private async Task LoadInitialProducts()
         {
             try
@@ -287,6 +302,7 @@ namespace ProductManagerApp.ViewModels
             ConfirmDeleteCommand?.RaiseCanExecuteChanged();
             CancelDeleteCommand?.RaiseCanExecuteChanged();
             RefreshCommand?.RaiseCanExecuteChanged();
+            ClearFormCommand?.RaiseCanExecuteChanged();
         }
 
         private void StartStatusClearTimer()

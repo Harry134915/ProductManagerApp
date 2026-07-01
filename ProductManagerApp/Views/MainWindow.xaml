@@ -11,6 +11,43 @@
 
     <Window.Resources>
         <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibilityConverter"/>
+
+        <Style x:Key="ToastBorderStyle" TargetType="Border">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform Y="-6"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsVisible" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 To="1" Duration="0:0:0.16"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                                                 To="0" Duration="0:0:0.18">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 To="0" Duration="0:0:0.12"/>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                                                 To="-4" Duration="0:0:0.12"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="14">
@@ -43,6 +80,7 @@
         <StackPanel Grid.Row="3" Margin="0,0,0,2">
             <Border Background="#FEF0F0" BorderBrush="#FBC4C4" BorderThickness="1"
                     CornerRadius="4" Padding="12,8" Margin="0,0,0,6"
+                    Style="{StaticResource ToastBorderStyle}"
                     Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="错误：" Foreground="#F56C6C" FontWeight="SemiBold"/>
@@ -52,6 +90,7 @@
 
             <Border Background="#F0F9EB" BorderBrush="#B3E19D" BorderThickness="1"
                     CornerRadius="4" Padding="12,8"
+                    Style="{StaticResource ToastBorderStyle}"
                     Visibility="{Binding StatusMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="状态：" Foreground="#67C23A" FontWeight="SemiBold"/>

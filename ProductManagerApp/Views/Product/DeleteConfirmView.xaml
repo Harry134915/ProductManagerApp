@@ -25,7 +25,7 @@
                                 <Storyboard>
                                     <DoubleAnimation
                                         Storyboard.TargetProperty="LayoutTransform.(ScaleTransform.ScaleY)"
-                                        To="1" Duration="0:0:0.3">
+                                        To="1" Duration="0:0:0.2">
                                         <DoubleAnimation.EasingFunction>
                                             <CubicEase EasingMode="EaseOut"/>
                                         </DoubleAnimation.EasingFunction>
@@ -33,7 +33,7 @@
 
                                     <DoubleAnimation
                                         Storyboard.TargetProperty="Opacity"
-                                        To="1" Duration="0:0:0.2"/>
+                                        To="1" Duration="0:0:0.14"/>
                                 </Storyboard>
                             </BeginStoryboard>
                         </DataTrigger.EnterActions>
@@ -47,7 +47,7 @@
 
                                     <DoubleAnimation
                                         Storyboard.TargetProperty="LayoutTransform.(ScaleTransform.ScaleY)"
-                                        To="0" Duration="0:0:0.2">
+                                        To="0" Duration="0:0:0.14">
                                         <DoubleAnimation.EasingFunction>
                                             <CubicEase EasingMode="EaseIn"/>
                                         </DoubleAnimation.EasingFunction>

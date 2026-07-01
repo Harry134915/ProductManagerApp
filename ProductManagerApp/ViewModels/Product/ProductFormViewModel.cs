@@ -121,6 +121,15 @@ namespace ProductManagerApp.ViewModels
             return true;
         }
 
+        public bool HasInput()
+        {
+            return !string.IsNullOrWhiteSpace(Code)
+                || !string.IsNullOrWhiteSpace(Name)
+                || !string.IsNullOrWhiteSpace(Price)
+                || !string.IsNullOrWhiteSpace(Stock)
+                || !string.IsNullOrWhiteSpace(Description);
+        }
+
         /// <summary>
         /// 构建增加商品的 DTO 对象
         /// </summary>

@@ -160,6 +160,11 @@
                         Command="{Binding DataContext.DeleteCommand,
                                   RelativeSource={RelativeSource AncestorType=Window}}"/>
 
+                    <Button Content="清空表单" Width="92" Margin="0,0,8,0"
+                        Style="{StaticResource DefaultButton}"
+                        Command="{Binding DataContext.ClearFormCommand,
+                                  RelativeSource={RelativeSource AncestorType=Window}}"/>
+
                     <Button Content="刷新" Width="72"
                         Style="{StaticResource DefaultButton}"
                         Command="{Binding DataContext.RefreshCommand,
