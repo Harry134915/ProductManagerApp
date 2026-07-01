@@ -44,5 +44,11 @@ namespace ProductManagerApp.BLL.Validators
             if (price <= 0)
                 throw new ProductValidationException("价格必须大于0！");
         }
+
+        public void ValidateCodeUnchanged(string currentCode, string updateCode)
+        {
+            if (!string.Equals(currentCode, updateCode, StringComparison.Ordinal))
+                throw new ProductValidationException("商品编码不可修改！");
+        }
     }
 }

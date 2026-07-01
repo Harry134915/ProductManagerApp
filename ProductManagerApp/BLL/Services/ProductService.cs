@@ -61,6 +61,12 @@ namespace ProductManagerApp.BLL.Services
 
             _validator.ValidateId(dto.Id);
 
+            var currentProduct = _repo.GetProductById(dto.Id);
+            if (currentProduct == null)
+                throw new ProductValidationException("更新失败，未找到对应的商品。");
+
+            _validator.ValidateCodeUnchanged(currentProduct.Code, dto.Code);
+
             var entity = ProductMapper.ToEntity(dto);
 
             _validator.Validate(entity);
