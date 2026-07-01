@@ -15,6 +15,11 @@
                 <Trigger Property="IsKeyboardFocused" Value="True">
                     <Setter Property="BorderBrush" Value="#409EFF"/>
                 </Trigger>
+                <Trigger Property="IsReadOnly" Value="True">
+                    <Setter Property="Background" Value="#F5F7FA"/>
+                    <Setter Property="Foreground" Value="#909399"/>
+                    <Setter Property="BorderBrush" Value="#E4E7ED"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
 
