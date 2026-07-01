@@ -8,5 +8,10 @@ namespace ProductManagerApp.BLL.Exceptions
             : base(message)
         {
         }
+
+        protected BusinessException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
     }
 }

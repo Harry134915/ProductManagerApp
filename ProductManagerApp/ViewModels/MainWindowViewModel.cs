@@ -11,6 +11,7 @@ namespace ProductManagerApp.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
+        private const string DatabaseErrorMessage = "数据库访问失败，请检查数据库文件或稍后重试。";
         private DispatcherTimer? _statusTimer;
         private readonly IProductService _service;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -115,7 +116,7 @@ namespace ProductManagerApp.ViewModels
             );
 
             //异步加载数据，避免界面卡顿
-            _ = List.LoadAsync();
+            _ = LoadInitialProducts();
         }
 
         private CancellationTokenSource? _cts;
@@ -133,10 +134,16 @@ namespace ProductManagerApp.ViewModels
         {
             try
             {
+                ErrorMessage = string.Empty;
                 List.IsRefreshing = true;
                 StatusMessage = "正在刷新商品列表...";
                 await List.LoadAsync();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
+            }
+            catch (DataAccessException ex)
+            {
+                Debug.WriteLine($"刷新失败: {ex}");
+                ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
@@ -163,6 +170,11 @@ namespace ProductManagerApp.ViewModels
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (DataAccessException ex)
+            {
+                Debug.WriteLine($"添加失败: {ex}");
+                ErrorMessage = DatabaseErrorMessage;
+            }
             catch (Exception ex)
             {
                 Debug.WriteLine($"添加失败: {ex}");
@@ -189,6 +201,11 @@ namespace ProductManagerApp.ViewModels
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (DataAccessException ex)
+            {
+                Debug.WriteLine($"更新失败: {ex}");
+                ErrorMessage = DatabaseErrorMessage;
+            }
             catch (Exception ex)
             {
                 Debug.WriteLine($"更新失败: {ex}");
@@ -219,6 +236,11 @@ namespace ProductManagerApp.ViewModels
                 Form.Clear();
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (DataAccessException ex)
+            {
+                Debug.WriteLine($"删除失败: {ex}");
+                ErrorMessage = DatabaseErrorMessage;
+            }
             catch (Exception ex)
             {
                 Debug.WriteLine($"删除失败: {ex}");
@@ -234,6 +256,24 @@ namespace ProductManagerApp.ViewModels
         {
             DeleteConfirm.Hide();
             DeleteConfirm.Target = null; // 清理引用，防止内存泄漏
+        }
+
+        private async Task LoadInitialProducts()
+        {
+            try
+            {
+                await List.LoadAsync();
+            }
+            catch (DataAccessException ex)
+            {
+                Debug.WriteLine($"初始加载商品列表失败: {ex}");
+                ErrorMessage = DatabaseErrorMessage;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"初始加载商品列表失败: {ex}");
+                ErrorMessage = "系统异常，请稍后再试！";
+            }
         }
 
         //不再使用 WPF 的命令系统自动监控属性变化来更新按钮状态，
