@@ -45,7 +45,8 @@
                                 <Setter Property="Background" Value="#66B1FF"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#C0C4CC"/>
+                                <Setter Property="Background" Value="#E4E7ED"/>
+                                <Setter Property="Foreground" Value="#A8ABB2"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -61,7 +62,8 @@
                     <Setter Property="Background" Value="#F78989"/>
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Background" Value="#C0C4CC"/>
+                    <Setter Property="Background" Value="#F1F3F6"/>
+                    <Setter Property="Foreground" Value="#B1B7C0"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
