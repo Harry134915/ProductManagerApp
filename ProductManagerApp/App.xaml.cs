@@ -6,6 +6,8 @@ using ProductManagerApp.DAL;
 using ProductManagerApp.DAL.Database;
 using ProductManagerApp.ViewModels;
 using ProductManagerApp.Views;
+using System.Data.SQLite;
+using System.IO;
 using System.Windows;
 
 //Startup、Exit、异常处理等逻辑写在这里
@@ -65,7 +67,13 @@ namespace ProductManagerApp
 
         private void ConfigureServices(IServiceCollection services)
         {
-            const string connStr = "Data Source=database.db;Version=3;";
+            var databasePath = Path.Combine(AppContext.BaseDirectory, "database.db");
+            var connStr = new SQLiteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Version = 3
+            }.ConnectionString;
+
             // 注册数据库提供程序
             services.AddSingleton<IDbProvider>(new SqliteProvider(connStr));
             // 注册数据库初始化器
