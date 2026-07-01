@@ -3,6 +3,7 @@ using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.BLL.Services;
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DAL;
+using ProductManagerApp.DAL.Database;
 using ProductManagerApp.ViewModels;
 using ProductManagerApp.Views;
 using System.Windows;
@@ -52,6 +53,9 @@ namespace ProductManagerApp
             ConfigureServices(serviceCollection);
 
             var services = serviceCollection.BuildServiceProvider();
+            Services = services;
+
+            services.GetRequiredService<IDatabaseInitializer>().Initialize();
 
             var mainWindow2 = services.GetRequiredService<MainWindow>();
             mainWindow2.Show();
@@ -64,6 +68,8 @@ namespace ProductManagerApp
             const string connStr = "Data Source=database.db;Version=3;";
             // 注册数据库提供程序
             services.AddSingleton<IDbProvider>(new SqliteProvider(connStr));
+            // 注册数据库初始化器
+            services.AddSingleton<IDatabaseInitializer, SqliteDatabaseInitializer>();
             // 注册仓储层
             services.AddTransient<IProductRepository, ProductRepository>();
             // 注册业务逻辑层
