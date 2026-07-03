@@ -39,13 +39,18 @@ ProductManagerApp
 ├─ ProgramFlow
 │  ├─ 设计文档.md
 │  └─ ScreenShot_*.png
+├─ ProductManagerApp.Tests
+│  ├─ BLL
+│  │  ├─ Mappers
+│  │  ├─ Services
+│  │  └─ Validators
+│  └─ Fakes
 └─ ProductManagerApp
    ├─ App.xaml
    ├─ App.xaml.cs
    ├─ ProductManagerApp.csproj
    ├─ Assets
    ├─ BLL
-   │  ├─ Exceptions
    │  ├─ Interfaces
    │  ├─ Mappers
    │  ├─ Services
@@ -57,6 +62,8 @@ ProductManagerApp
    ├─ DTO
    ├─ Entity
    ├─ Infrastructure
+   │  ├─ Commands
+   │  └─ Exceptions
    ├─ ViewModels
    └─ Views
 ```
@@ -219,6 +226,48 @@ dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 2. 将 `ProductManagerApp` 设置为启动项目
 3. 点击运行
 
+## 测试说明
+
+项目包含独立测试项目：
+
+```text
+ProductManagerApp.Tests
+```
+
+测试框架使用 `xUnit`，测试项目引用主项目，但不连接真实 SQLite，也不启动 WPF 窗口。
+
+当前测试覆盖：
+
+- `ProductValidator`
+  - 商品编码、名称、价格、库存、描述校验
+  - 商品 ID 校验
+  - 商品编码不可修改校验
+- `ProductMapper`
+  - `ProductCreateDto -> Product`
+  - `ProductUpdateDto -> Product`
+  - `Product -> ProductQueryDto`
+- `ProductService`
+  - 查询结果映射
+  - 新增商品
+  - 更新商品
+  - 更新价格
+  - 删除商品
+  - 商品不存在、编码被修改、非法参数等异常场景
+
+测试中使用手写 `FakeProductRepository` 替代真实数据库仓储，避免单元测试依赖本地数据库文件。
+
+运行测试：
+
+```powershell
+dotnet test ProductManagerApp.sln
+```
+
+当前测试规模：
+
+```text
+26 个测试
+```
+
 ## 当前设计约定
 
 - 商品编码用于唯一标识商品，新增后不可修改。
@@ -242,4 +291,3 @@ ViewModel 会捕获这些异常，并显示适合用户理解的提示文案。
 ## 说明
 
 `Assets/Idol.jpg` 是项目当前窗口图标资源，属于个人设定，保留不做替换。
-
