@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace ProductManagerApp.BLL.Exceptions
+namespace ProductManagerApp.Infrastructure.Exceptions
 {
     public abstract class BusinessException : Exception
     {

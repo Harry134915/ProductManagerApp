@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.BLL.Exceptions;
+﻿using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.DTO;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;

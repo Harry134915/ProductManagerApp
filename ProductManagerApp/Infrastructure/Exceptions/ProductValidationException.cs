@@ -1,4 +1,4 @@
-﻿namespace ProductManagerApp.BLL.Exceptions
+namespace ProductManagerApp.Infrastructure.Exceptions
 {
     public class ProductValidationException : BusinessException
     {

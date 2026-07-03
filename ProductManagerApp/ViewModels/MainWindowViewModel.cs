@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.BLL.Exceptions;
+﻿using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.Infrastructure.Commands;
 using System.ComponentModel;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ProductManagerApp.Entity;
-using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.Infrastructure.Exceptions;
 
 
 namespace ProductManagerApp.BLL.Validators

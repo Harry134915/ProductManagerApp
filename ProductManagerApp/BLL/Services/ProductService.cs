@@ -1,4 +1,4 @@
-﻿using ProductManagerApp.BLL.Exceptions;
+﻿using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.BLL.Mappers;
 using ProductManagerApp.BLL.Validators;

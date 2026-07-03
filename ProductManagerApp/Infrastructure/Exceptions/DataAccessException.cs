@@ -1,4 +1,6 @@
-namespace ProductManagerApp.BLL.Exceptions
+using System;
+
+namespace ProductManagerApp.Infrastructure.Exceptions
 {
     public class DataAccessException : BusinessException
     {

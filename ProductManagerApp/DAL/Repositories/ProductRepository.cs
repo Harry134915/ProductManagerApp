@@ -1,5 +1,5 @@
 using Dapper;
-using ProductManagerApp.BLL.Exceptions;
+using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.Entity;
 using System.Data;
 using System.Data.SQLite;
