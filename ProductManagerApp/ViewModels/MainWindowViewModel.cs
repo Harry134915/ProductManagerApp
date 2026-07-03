@@ -59,12 +59,12 @@ namespace ProductManagerApp.ViewModels
         }
 
         // 命令还是在这里统一定义
-        public RelayCommand AddCommand { get; }
-        public RelayCommand UpdateCommand { get; }
+        public AsyncRelayCommand AddCommand { get; }
+        public AsyncRelayCommand UpdateCommand { get; }
         public RelayCommand DeleteCommand { get; }
-        public RelayCommand ConfirmDeleteCommand { get; }
+        public AsyncRelayCommand ConfirmDeleteCommand { get; }
         public RelayCommand CancelDeleteCommand { get; }
-        public RelayCommand RefreshCommand { get; }
+        public AsyncRelayCommand RefreshCommand { get; }
         public RelayCommand ClearFormCommand { get; }
         public MainWindowViewModel(IProductService service)
         {
@@ -84,20 +84,18 @@ namespace ProductManagerApp.ViewModels
             };
 
 
-            // RelayCommand 接收的是 Action<object>，
-            // 异步方法需要以 async _ => await Method() 的形式调用
-            AddCommand = new RelayCommand(
-                async _ => await AddProduct(),
+            AddCommand = new AsyncRelayCommand(
+                _ => AddProduct(),
                 _ => List.SelectedProduct == null && Form.CanAdd()
             );
 
-            RefreshCommand = new RelayCommand(
-                async _ => await Refresh(),
+            RefreshCommand = new AsyncRelayCommand(
+                _ => Refresh(),
                 _ => !List.IsRefreshing
             );
 
-            UpdateCommand = new RelayCommand(
-                async _ => await UpdateProduct(),
+            UpdateCommand = new AsyncRelayCommand(
+                _ => UpdateProduct(),
                 _ => Form.CanUpdate(List.SelectedProduct != null)
             );
 
@@ -106,8 +104,8 @@ namespace ProductManagerApp.ViewModels
                 _ => List.SelectedProduct != null
             );
 
-            ConfirmDeleteCommand = new RelayCommand(
-                async _ => await ConfirmDelete(),
+            ConfirmDeleteCommand = new AsyncRelayCommand(
+                _ => ConfirmDelete(),
                 _ => DeleteConfirm.Target != null
             );
 
