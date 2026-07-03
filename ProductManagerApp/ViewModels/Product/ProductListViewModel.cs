@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -58,13 +59,14 @@ namespace ProductManagerApp.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        public async Task LoadAsync()
+        public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
             IsRefreshing = true;
             try
             {
                 //在后台线程调用同步接口
-                var data = await Task.Run(() => _service.GetAllProducts());
+                var data = await Task.Run(() => _service.GetAllProducts(), cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
 
                 //回到UI线程更新集合
                 Products.Clear();

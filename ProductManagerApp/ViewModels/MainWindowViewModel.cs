@@ -130,19 +130,56 @@ namespace ProductManagerApp.ViewModels
         /// </summary>
         public void CancelOperations()
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
+            CancelCurrentOperation();
+        }
+
+        private CancellationTokenSource BeginOperation()
+        {
+            CancelCurrentOperation();
+            _cts = new CancellationTokenSource();
+            return _cts;
+        }
+
+        private void CompleteOperation(CancellationTokenSource operationCts)
+        {
+            if (!ReferenceEquals(_cts, operationCts))
+            {
+                return;
+            }
+
+            _cts.Dispose();
+            _cts = null;
+        }
+
+        private void CancelCurrentOperation()
+        {
+            if (_cts == null)
+            {
+                return;
+            }
+
+            _cts.Cancel();
+            _cts.Dispose();
+            _cts = null;
         }
 
         private async Task Refresh()
         {
+            var operationCts = BeginOperation();
+            var token = operationCts.Token;
+
             try
             {
                 ErrorMessage = string.Empty;
                 List.IsRefreshing = true;
                 StatusMessage = "正在刷新商品列表...";
-                await List.LoadAsync();
+                await List.LoadAsync(token);
+                token.ThrowIfCancellationRequested();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Debug.WriteLine("刷新操作已取消。");
             }
             catch (DataAccessException ex)
             {
@@ -157,21 +194,30 @@ namespace ProductManagerApp.ViewModels
             finally
             {
                 List.IsRefreshing = false;
+                CompleteOperation(operationCts);
                 UpdateAllCommands();
             }
         }
 
         private async Task AddProduct()
         {
+            var operationCts = BeginOperation();
+            var token = operationCts.Token;
+
             try
             {
                 ErrorMessage = string.Empty;
-                _cts = new CancellationTokenSource();
 
-                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()), _cts.Token);
+                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()), token);
+                token.ThrowIfCancellationRequested();
                 StatusMessage = "添加成功！";
-                await List.LoadAsync();
+                await List.LoadAsync(token);
+                token.ThrowIfCancellationRequested();
                 Form.Clear();
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Debug.WriteLine("添加操作已取消。");
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
             catch (DataAccessException ex)
@@ -184,10 +230,17 @@ namespace ProductManagerApp.ViewModels
                 Debug.WriteLine($"添加失败: {ex}");
                 ErrorMessage = "系统异常，请稍后再试！";
             }
+            finally
+            {
+                CompleteOperation(operationCts);
+            }
         }
 
         private async Task UpdateProduct()
         {
+            CancellationTokenSource? operationCts = null;
+            CancellationToken token = default;
+
             try
             {
                 ErrorMessage = string.Empty;
@@ -198,11 +251,19 @@ namespace ProductManagerApp.ViewModels
                     return;
                 }
 
-                _cts = new CancellationTokenSource();
-                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)), _cts.Token);
+                operationCts = BeginOperation();
+                token = operationCts.Token;
+
+                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)), token);
+                token.ThrowIfCancellationRequested();
                 StatusMessage = "更新成功！";
-                await List.LoadAsync();
+                await List.LoadAsync(token);
+                token.ThrowIfCancellationRequested();
                 Form.Clear();
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Debug.WriteLine("更新操作已取消。");
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
             catch (DataAccessException ex)
@@ -214,6 +275,13 @@ namespace ProductManagerApp.ViewModels
             {
                 Debug.WriteLine($"更新失败: {ex}");
                 ErrorMessage = "系统异常，请稍后再试！";
+            }
+            finally
+            {
+                if (operationCts != null)
+                {
+                    CompleteOperation(operationCts);
+                }
             }
         }
 
@@ -229,15 +297,22 @@ namespace ProductManagerApp.ViewModels
             var target = DeleteConfirm.Target;
             if (target == null) return;
 
+            var operationCts = BeginOperation();
+            var token = operationCts.Token;
+
             try
             {
-                _cts = new CancellationTokenSource();
-
                 //异步删除，避免界面卡顿
-                await Task.Run(() => _service.DeleteProduct(target.Id), _cts.Token);
+                await Task.Run(() => _service.DeleteProduct(target.Id), token);
+                token.ThrowIfCancellationRequested();
                 StatusMessage = $"已删除商品：{target.Name}";
-                await List.LoadAsync();
+                await List.LoadAsync(token);
+                token.ThrowIfCancellationRequested();
                 Form.Clear();
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Debug.WriteLine("删除操作已取消。");
             }
             catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
             catch (DataAccessException ex)
@@ -252,6 +327,7 @@ namespace ProductManagerApp.ViewModels
             }
             finally
             {
+                CompleteOperation(operationCts);
                 DeleteConfirm.Hide();
             }
         }
@@ -273,9 +349,16 @@ namespace ProductManagerApp.ViewModels
 
         private async Task LoadInitialProducts()
         {
+            var operationCts = BeginOperation();
+            var token = operationCts.Token;
+
             try
             {
-                await List.LoadAsync();
+                await List.LoadAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Debug.WriteLine("初始加载商品列表操作已取消。");
             }
             catch (DataAccessException ex)
             {
@@ -286,6 +369,10 @@ namespace ProductManagerApp.ViewModels
             {
                 Debug.WriteLine($"初始加载商品列表失败: {ex}");
                 ErrorMessage = "系统异常，请稍后再试！";
+            }
+            finally
+            {
+                CompleteOperation(operationCts);
             }
         }
 
