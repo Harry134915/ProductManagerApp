@@ -1,26 +1,17 @@
-﻿using ProductManagerApp.BLL.Interfaces;
+using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.DTO;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Xml.Linq;
 
 namespace ProductManagerApp.ViewModels
 {
     public class ProductListViewModel : INotifyPropertyChanged
     {
         private readonly IProductService _service;
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public event Action? StateChanged;
+        private bool _isRefreshing;
+        private ProductQueryDto? _selectedProduct;
 
         public ProductListViewModel(IProductService service)
         {
@@ -28,13 +19,12 @@ namespace ProductManagerApp.ViewModels
             Products = new ObservableCollection<ProductQueryDto>();
         }
 
-        // 商品列表（绑定 DataGrid）
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? StateChanged;
+        public event Action<ProductQueryDto?>? SelectedProductChanged;
+
         public ObservableCollection<ProductQueryDto> Products { get; } = new();
 
-        // ============================================================
-        // 选中商品，为商品的更新和删除做准备
-        // ============================================================
-        private ProductQueryDto? _selectedProduct;
         public ProductQueryDto? SelectedProduct
         {
             get => _selectedProduct;
@@ -44,46 +34,11 @@ namespace ProductManagerApp.ViewModels
 
                 _selectedProduct = value;
                 OnPropertyChanged();
-
                 SelectedProductChanged?.Invoke(value);
-
-                //选中变化，按钮状态重新评估
-                StateChanged?.Invoke();//通知外部刷新命令
-            }
-        }
-
-        // 外部（MainVM）订阅这个事件，做联动
-        public event Action<ProductQueryDto?>? SelectedProductChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-        public async Task LoadAsync(CancellationToken cancellationToken = default)
-        {
-            IsRefreshing = true;
-            try
-            {
-                //在后台线程调用同步接口
-                var data = await Task.Run(() => _service.GetAllProducts(), cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
-
-                //回到UI线程更新集合
-                Products.Clear();
-                foreach (var p in data)
-                {
-                    Products.Add(p);
-                }
-            }
-            finally
-            {
-                IsRefreshing = false;
                 StateChanged?.Invoke();
             }
-
         }
 
-        private bool _isRefreshing;
         public bool IsRefreshing
         {
             get => _isRefreshing;
@@ -91,8 +46,34 @@ namespace ProductManagerApp.ViewModels
             {
                 _isRefreshing = value;
                 OnPropertyChanged();
-                StateChanged?.Invoke();//通知外部刷新命令状态
+                StateChanged?.Invoke();
             }
+        }
+
+        public async Task LoadAsync(CancellationToken cancellationToken = default)
+        {
+            IsRefreshing = true;
+            try
+            {
+                var data = await Task.Run(() => _service.GetAllProducts(), cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                Products.Clear();
+                foreach (var product in data)
+                {
+                    Products.Add(product);
+                }
+            }
+            finally
+            {
+                IsRefreshing = false;
+                StateChanged?.Invoke();
+            }
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

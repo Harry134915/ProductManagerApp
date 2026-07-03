@@ -4,8 +4,7 @@ using System.Collections.Generic;
 namespace ProductManagerApp.DAL
 {
     /// <summary>
-    /// 产品数据访问接口
-    /// 只返回 Model，不再使用 DataTable
+    /// 商品数据访问接口。
     /// </summary>
     public interface IProductRepository
     {

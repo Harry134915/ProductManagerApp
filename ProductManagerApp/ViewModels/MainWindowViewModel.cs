@@ -376,9 +376,7 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
-        //不再使用 WPF 的命令系统自动监控属性变化来更新按钮状态，
-        //手动调用 RaiseCanExecuteChanged 来通知界面重新评估命令的可执行状态。
-        // 每次选中变化后，所有命令的 CanExecute 都需要重新评估
+        // 输入、选中和确认状态变化后，通知界面重新评估命令可执行状态。
         private void UpdateAllCommands()
         {
             AddCommand?.RaiseCanExecuteChanged();

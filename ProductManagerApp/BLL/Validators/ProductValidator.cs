@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ProductManagerApp.Entity;
 using ProductManagerApp.Infrastructure.Exceptions;
-
 
 namespace ProductManagerApp.BLL.Validators
 {
@@ -34,11 +28,13 @@ namespace ProductManagerApp.BLL.Validators
                 throw new ProductValidationException("描述不能只有空白字符！");
             }
         }
+
         public void ValidateId(int id)
         {
             if (id <= 0)
                 throw new ProductValidationException("商品id不合法！");
         }
+
         public void ValidatePrice(decimal price)
         {
             if (price <= 0)

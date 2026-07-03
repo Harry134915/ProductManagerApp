@@ -15,11 +15,6 @@ namespace ProductManagerApp.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        //   输入框变化
-        //→ 属性 setter
-        //→ CanExecute 重新评估
-        //→ 按钮自动灰 / 亮
-
         private string? _code;
         public string? Code
         {
@@ -102,8 +97,6 @@ namespace ProductManagerApp.ViewModels
             return true;
         }
 
-        //out decimal price和out _的区别：前者是点击“添加”按钮，后面需要用到 price
-        //而后者则是CanExecute 判断按钮是否可用，只关心格式是否正确，不需要值
         public bool CanUpdate(bool hasSelected)
         {
             if (!hasSelected)
@@ -130,10 +123,6 @@ namespace ProductManagerApp.ViewModels
                 || !string.IsNullOrWhiteSpace(Description);
         }
 
-        /// <summary>
-        /// 构建增加商品的 DTO 对象
-        /// </summary>
-        /// <param name="ToCreateDto">构建增加商品的 DTO 对象</param>
         public ProductCreateDto ToCreateDto()
         {
             if (string.IsNullOrWhiteSpace(Code))
@@ -178,7 +167,6 @@ namespace ProductManagerApp.ViewModels
             };
         }
 
-        //把选中商品填入表单
         public void FillFrom(ProductQueryDto? dto)
         {
             if (dto == null)
@@ -192,7 +180,6 @@ namespace ProductManagerApp.ViewModels
         }
         public void Clear()
         {
-            // 清空输入框
             Code = "";
             Name = "";
             Price = "";
