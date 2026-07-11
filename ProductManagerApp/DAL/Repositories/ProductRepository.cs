@@ -47,6 +47,26 @@ namespace ProductManagerApp.DAL
             }
         }
 
+        public Product? GetProductByCode(string code)
+        {
+            const string sql = @"
+                SELECT id, code, name, price, stock, description
+                FROM products
+                WHERE code = @Code COLLATE NOCASE
+                LIMIT 1
+            ";
+
+            try
+            {
+                using var conn = _dbProvider.CreateConnection();
+                return conn.QueryFirstOrDefault<Product>(sql, new { Code = code });
+            }
+            catch (Exception ex) when (IsDataAccessException(ex))
+            {
+                throw CreateDataAccessException("按编码查询商品", ex);
+            }
+        }
+
         // 新增商品
         public int AddProduct(Product product)
         {

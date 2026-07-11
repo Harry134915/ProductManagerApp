@@ -81,6 +81,7 @@
                         <TextBox x:Name="CodeBox"
                                  Tag="Code"
                                  Style="{StaticResource FormTextBoxStyle}"
+                                 InputMethod.IsInputMethodEnabled="False"
                                  LostKeyboardFocus="OnFieldLostKeyboardFocus"
                                  Text="{Binding Code,
                                                 UpdateSourceTrigger=PropertyChanged,

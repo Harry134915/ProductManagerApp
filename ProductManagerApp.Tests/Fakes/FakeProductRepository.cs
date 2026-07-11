@@ -31,6 +31,12 @@ internal sealed class FakeProductRepository : IProductRepository
         return Products.FirstOrDefault(product => product.Id == id);
     }
 
+    public Product? GetProductByCode(string code)
+    {
+        return Products.FirstOrDefault(product =>
+            string.Equals(product.Code, code, StringComparison.OrdinalIgnoreCase));
+    }
+
     public int AddProduct(Product product)
     {
         AddProductCallCount++;

@@ -16,6 +16,9 @@ namespace ProductManagerApp.BLL.Validators
             if (string.IsNullOrWhiteSpace(product.Code))
                 throw new ProductValidationException("商品编码不能为空！");
 
+            if (!ProductCodeRules.IsValid(product.Code))
+                throw new ProductValidationException(ProductCodeRules.InvalidFormatMessage);
+
             if (product.Price <= 0)
                 throw new ProductValidationException("价格必须大于0！");
 

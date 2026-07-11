@@ -35,6 +35,11 @@ namespace ProductManagerApp.BLL.Services
 
             _validator.Validate(entity);
 
+            if (_repo.GetProductByCode(entity.Code) != null)
+            {
+                throw new ProductValidationException($"商品编码“{entity.Code}”已存在，请使用其他编码。");
+            }
+
             _repo.AddProduct(entity);
         }
 

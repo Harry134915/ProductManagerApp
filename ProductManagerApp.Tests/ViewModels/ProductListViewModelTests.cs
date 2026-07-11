@@ -135,6 +135,39 @@ public class ProductListViewModelTests
         Assert.Equal("正在重新加载商品列表...", viewModel.LoadingMessage);
     }
 
+    [Fact]
+    public async Task LoadAsync_WithSelectedProduct_RestoresSelectionFromRefreshedData()
+    {
+        var productName = "Phone";
+        var service = new StubProductService
+        {
+            GetAllProductsHandler = () => new List<ProductQueryDto>
+            {
+                new()
+                {
+                    Id = 1,
+                    Code = "P001",
+                    Name = productName,
+                    Price = 1999m,
+                    Stock = 10,
+                    Description = "Flagship phone"
+                }
+            }
+        };
+        var viewModel = new ProductListViewModel(service);
+        await viewModel.LoadAsync();
+        var originalSelection = Assert.Single(viewModel.Products);
+        viewModel.SelectedProduct = originalSelection;
+
+        productName = "Phone Pro";
+        await viewModel.LoadAsync();
+
+        Assert.NotNull(viewModel.SelectedProduct);
+        Assert.NotSame(originalSelection, viewModel.SelectedProduct);
+        Assert.Equal(1, viewModel.SelectedProduct.Id);
+        Assert.Equal("Phone Pro", viewModel.SelectedProduct.Name);
+    }
+
     private static ProductQueryDto CreateProduct()
     {
         return new ProductQueryDto

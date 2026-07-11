@@ -61,6 +61,23 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public void AddProduct_WithDuplicateCode_ThrowsValidationExceptionAndDoesNotAdd()
+    {
+        var repo = new FakeProductRepository();
+        repo.Products.Add(CreateExistingProduct());
+        var service = CreateService(repo);
+        var dto = CreateValidCreateDto();
+        dto.Code = "p001";
+
+        var exception = Assert.Throws<ProductValidationException>(
+            () => service.AddProduct(dto));
+
+        Assert.Equal("商品编码“p001”已存在，请使用其他编码。", exception.Message);
+        Assert.Equal(0, repo.AddProductCallCount);
+        Assert.Single(repo.Products);
+    }
+
+    [Fact]
     public void UpdateProduct_WhenProductDoesNotExist_ThrowsValidationException()
     {
         var repo = new FakeProductRepository();

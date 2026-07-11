@@ -36,6 +36,21 @@ public class ProductValidatorTests
     }
 
     [Theory]
+    [InlineData("跳跳糖")]
+    [InlineData("P 001")]
+    [InlineData("P001!")]
+    public void Validate_WithInvalidCodeFormat_ThrowsValidationException(string code)
+    {
+        var product = CreateValidProduct();
+        product.Code = code;
+
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductCodeRules.InvalidFormatMessage, exception.Message);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("   ")]
     public void Validate_WithEmptyName_ThrowsValidationException(string name)

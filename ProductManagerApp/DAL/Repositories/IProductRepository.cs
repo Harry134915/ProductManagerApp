@@ -14,6 +14,9 @@ namespace ProductManagerApp.DAL
         // 查询一个
         Product? GetProductById(int id);
 
+        // 按编码查询
+        Product? GetProductByCode(string code);
+
         // 新增
         int AddProduct(Product product);
 

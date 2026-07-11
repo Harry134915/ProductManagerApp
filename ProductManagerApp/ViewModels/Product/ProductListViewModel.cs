@@ -108,6 +108,7 @@ namespace ProductManagerApp.ViewModels
             string? loadingMessage = null)
         {
             var loadVersion = ++_loadVersion;
+            var selectedProductId = SelectedProduct?.Id;
             LoadingMessage = loadingMessage ?? GetDefaultLoadingMessage();
             LoadErrorMessage = null;
             IsRefreshing = true;
@@ -129,6 +130,10 @@ namespace ProductManagerApp.ViewModels
                 {
                     Products.Add(product);
                 }
+
+                SelectedProduct = selectedProductId.HasValue
+                    ? Products.FirstOrDefault(product => product.Id == selectedProductId.Value)
+                    : null;
 
                 HasLoaded = true;
                 OnPropertyChanged(nameof(IsEmpty));

@@ -104,7 +104,15 @@ namespace ProductManagerApp.ViewModels
 
             List.SelectedProductChanged += product =>
             {
-                Form.FillFrom(product);
+                if (product == null)
+                {
+                    Form.Clear();
+                }
+                else
+                {
+                    Form.FillFrom(product);
+                }
+
                 NotifyFormModeChanged();
                 UpdateAllCommands();
             };
@@ -112,7 +120,7 @@ namespace ProductManagerApp.ViewModels
 
             AddCommand = new AsyncRelayCommand(
                 _ => AddProduct(),
-                _ => List.SelectedProduct == null
+                _ => List.SelectedProduct == null && !List.IsRefreshing
             );
 
             RefreshCommand = new AsyncRelayCommand(
@@ -122,12 +130,12 @@ namespace ProductManagerApp.ViewModels
 
             UpdateCommand = new AsyncRelayCommand(
                 _ => UpdateProduct(),
-                _ => List.SelectedProduct != null
+                _ => List.SelectedProduct != null && !List.IsRefreshing
             );
 
             DeleteCommand = new RelayCommand(
                 _ => DeleteProduct(),
-                _ => List.SelectedProduct != null
+                _ => List.SelectedProduct != null && !List.IsRefreshing
             );
 
             ConfirmDeleteCommand = new AsyncRelayCommand(

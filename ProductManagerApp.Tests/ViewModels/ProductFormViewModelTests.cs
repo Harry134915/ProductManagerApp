@@ -58,6 +58,23 @@ public class ProductFormViewModelTests
     }
 
     [Theory]
+    [InlineData("跳跳糖")]
+    [InlineData("P 001")]
+    [InlineData("P001!")]
+    public void ValidateForSubmit_WithInvalidCodeFormat_ShowsCodeError(string code)
+    {
+        var viewModel = CreateValidForm();
+        viewModel.Code = code;
+
+        var isValid = viewModel.ValidateForSubmit();
+
+        Assert.False(isValid);
+        Assert.Equal(
+            "商品编码只能包含英文字母、数字、连字符（-）和下划线（_）。",
+            GetError(viewModel, nameof(ProductFormViewModel.Code)));
+    }
+
+    [Theory]
     [InlineData("abc", "请输入有效数字，例如 99.90。")]
     [InlineData("0", "价格必须大于 0。")]
     [InlineData("-1", "价格必须大于 0。")]

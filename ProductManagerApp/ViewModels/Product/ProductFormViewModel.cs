@@ -1,3 +1,4 @@
+using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DTO;
 using ProductManagerApp.Infrastructure.Exceptions;
 using System.Collections;
@@ -219,6 +220,8 @@ namespace ProductManagerApp.ViewModels
             {
                 nameof(Code) when string.IsNullOrWhiteSpace(Code) =>
                     "请输入商品编码。",
+                nameof(Code) when !ProductCodeRules.IsValid(Code) =>
+                    ProductCodeRules.InvalidFormatMessage,
                 nameof(Name) when string.IsNullOrWhiteSpace(Name) =>
                     "请输入商品名称。",
                 nameof(Price) => GetPriceValidationMessage(),

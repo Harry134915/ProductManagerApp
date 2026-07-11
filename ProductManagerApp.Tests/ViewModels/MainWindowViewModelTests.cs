@@ -27,12 +27,13 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void SelectingProduct_UsesEditModeAndDisablesAdd()
+    public async Task SelectingProduct_UsesEditModeAndDisablesAdd()
     {
         var viewModel = CreateViewModel();
 
         try
         {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
             viewModel.List.SelectedProduct = CreateProduct();
 
             Assert.True(viewModel.IsEditMode);
@@ -78,13 +79,49 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void AddCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
+    public async Task RefreshCommand_WithSelectedProduct_PreservesEditModeAndDisablesAdd()
+    {
+        var repository = new FakeProductRepository();
+        repository.Products.Add(new ProductManagerApp.Entity.Product
+        {
+            Id = 1,
+            Code = "P001",
+            Name = "Phone",
+            Price = 1999m,
+            Stock = 10,
+            Description = "Flagship phone"
+        });
+        var viewModel = CreateViewModel(repository);
+
+        try
+        {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
+            viewModel.List.SelectedProduct = Assert.Single(viewModel.List.Products);
+
+            viewModel.RefreshCommand.Execute(null);
+            await WaitUntilAsync(() => !viewModel.RefreshCommand.IsExecuting);
+
+            Assert.True(viewModel.IsEditMode);
+            Assert.NotNull(viewModel.List.SelectedProduct);
+            Assert.Equal(1, viewModel.List.SelectedProduct.Id);
+            Assert.Equal("P001", viewModel.Form.Code);
+            Assert.False(viewModel.AddCommand.CanExecute(null));
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task AddCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
     {
         var repository = new FakeProductRepository();
         var viewModel = CreateViewModel(repository);
 
         try
         {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
             viewModel.AddCommand.Execute(null);
 
             Assert.True(viewModel.Form.HasErrors);
@@ -99,13 +136,14 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void UpdateCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
+    public async Task UpdateCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
     {
         var repository = new FakeProductRepository();
         var viewModel = CreateViewModel(repository);
 
         try
         {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
             viewModel.List.SelectedProduct = CreateProduct();
             viewModel.Form.Price = "0";
 
@@ -141,5 +179,15 @@ public class MainWindowViewModelTests
             Stock = 10,
             Description = "Flagship phone"
         };
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+
+        while (!condition())
+        {
+            await Task.Delay(10, cancellationTokenSource.Token);
+        }
     }
 }
