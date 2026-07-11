@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
         <Style x:Key="CenterCellText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -30,87 +32,131 @@
                            VerticalAlignment="Center"/>
             </Grid>
 
-            <DataGrid ItemsSource="{Binding Products}"
-                      SelectedItem="{Binding SelectedProduct}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#EBEEF5"
-                      BorderThickness="0"
-                      RowHeight="40"
-                      ColumnHeaderHeight="38"
-                      Background="White"
-                      AlternatingRowBackground="#FAFAFA"
-                      SelectionUnit="FullRow"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False">
+            <Grid>
+                <DataGrid ItemsSource="{Binding Products}"
+                          SelectedItem="{Binding SelectedProduct}"
+                          AutomationProperties.Name="商品列表"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#EBEEF5"
+                          BorderThickness="0"
+                          RowHeight="40"
+                          ColumnHeaderHeight="38"
+                          Background="White"
+                          AlternatingRowBackground="#FAFAFA"
+                          SelectionUnit="FullRow"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False">
 
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#F5F7FA"/>
-                        <Setter Property="Foreground" Value="#606266"/>
-                        <Setter Property="FontSize" Value="12"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="12,0"/>
-                        <Setter Property="BorderBrush" Value="#EBEEF5"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#F5F7FA"/>
+                            <Setter Property="Foreground" Value="#606266"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="12,0"/>
+                            <Setter Property="BorderBrush" Value="#EBEEF5"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
 
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="Padding" Value="12,0"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Foreground" Value="#606266"/>
-                        <Setter Property="FontSize" Value="13"/>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="12,0"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Foreground" Value="#606266"/>
+                            <Setter Property="FontSize" Value="13"/>
 
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="DataGridCell">
-                                    <Border Padding="{TemplateBinding Padding}"
-                                            Background="{TemplateBinding Background}">
-                                        <ContentPresenter VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridCell">
+                                        <Border Padding="{TemplateBinding Padding}"
+                                                Background="{TemplateBinding Background}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
 
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#ECF5FF"/>
-                                <Setter Property="Foreground" Value="#409EFF"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.CellStyle>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#ECF5FF"/>
+                                    <Setter Property="Foreground" Value="#409EFF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
 
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#ECF5FF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#F5F7FA"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#ECF5FF"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#F5F7FA"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
 
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="64"
-                                        ElementStyle="{StaticResource CenterCellText}"/>
-                    <DataGridTextColumn Header="商品编码" Binding="{Binding Code}" Width="130"/>
-                    <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="160"/>
-                    <DataGridTextColumn Header="价格" Binding="{Binding Price, StringFormat={}{0:F2}}" Width="100"
-                                        ElementStyle="{StaticResource RightCellText}"/>
-                    <DataGridTextColumn Header="库存" Binding="{Binding Stock}" Width="90"
-                                        ElementStyle="{StaticResource CenterCellText}"/>
-                    <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="64"
+                                            ElementStyle="{StaticResource CenterCellText}"/>
+                        <DataGridTextColumn Header="商品编码" Binding="{Binding Code}" Width="130"/>
+                        <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="160"/>
+                        <DataGridTextColumn Header="价格" Binding="{Binding Price, StringFormat={}{0:F2}}" Width="100"
+                                            ElementStyle="{StaticResource RightCellText}"/>
+                        <DataGridTextColumn Header="库存" Binding="{Binding Stock}" Width="90"
+                                            ElementStyle="{StaticResource CenterCellText}"/>
+                        <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Panel.ZIndex="10" Background="White"
+                        Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="暂无商品" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="#303133" HorizontalAlignment="Center"/>
+                        <TextBlock Text="当前列表中没有商品数据"
+                                   Foreground="#606266" FontSize="12" Margin="0,6,0,0"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Panel.ZIndex="20" Background="White"
+                        AutomationProperties.LiveSetting="Assertive"
+                        Visibility="{Binding HasLoadError, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                MaxWidth="360">
+                        <TextBlock Text="商品列表加载失败" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="#C53030" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding LoadErrorMessage}"
+                                   Foreground="#606266" FontSize="12" Margin="0,6,0,12"
+                                   TextWrapping="Wrap" TextAlignment="Center"/>
+                        <Button Content="重新加载" Width="92"
+                                Style="{StaticResource DefaultButton}"
+                                Command="{Binding DataContext.RefreshCommand,
+                                                  RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Panel.ZIndex="30" Background="#F2FFFFFF"
+                        AutomationProperties.LiveSetting="Polite"
+                        Visibility="{Binding IsRefreshing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar Width="180" Height="4"
+                                     IsIndeterminate="True"
+                                     Foreground="#409EFF" Background="#E4E7ED"/>
+                        <TextBlock Text="{Binding LoadingMessage}"
+                                   Foreground="#606266" FontSize="12" Margin="0,10,0,0"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </DockPanel>
     </Border>
 </UserControl>

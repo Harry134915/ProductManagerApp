@@ -1,8 +1,9 @@
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace ProductManagerApp.Infrastructure.Commands
 {
-    public class AsyncRelayCommand : ICommand
+    public class AsyncRelayCommand : ICommand, INotifyPropertyChanged
     {
         private readonly Func<object?, Task> _execute;
         private readonly Func<object?, bool>? _canExecute;
@@ -28,22 +29,36 @@ namespace ProductManagerApp.Infrastructure.Commands
 
             try
             {
-                _isExecuting = true;
+                SetIsExecuting(true);
                 RaiseCanExecuteChanged();
                 await _execute(parameter);
             }
             finally
             {
-                _isExecuting = false;
+                SetIsExecuting(false);
                 RaiseCanExecuteChanged();
             }
         }
 
         public event EventHandler? CanExecuteChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public void RaiseCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void SetIsExecuting(bool value)
+        {
+            if (_isExecuting == value)
+            {
+                return;
+            }
+
+            _isExecuting = value;
+            PropertyChanged?.Invoke(
+                this,
+                new PropertyChangedEventArgs(nameof(IsExecuting)));
         }
     }
 }

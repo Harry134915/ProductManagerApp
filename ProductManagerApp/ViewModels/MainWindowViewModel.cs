@@ -197,8 +197,6 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 ErrorMessage = string.Empty;
-                List.IsRefreshing = true;
-                StatusMessage = "正在刷新商品列表...";
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
@@ -215,11 +213,10 @@ namespace ProductManagerApp.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"刷新失败: {ex}");
-                StatusMessage = "刷新失败，请稍后再试！";
+                ErrorMessage = "刷新失败，请稍后再试！";
             }
             finally
             {
-                List.IsRefreshing = false;
                 CompleteOperation(operationCts);
                 UpdateAllCommands();
             }

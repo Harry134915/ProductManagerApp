@@ -79,9 +79,22 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="确认删除" Width="84" Margin="0,0,8,0"
-                        Style="{StaticResource DangerButton}"
-                        Command="{Binding DataContext.ConfirmDeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                <Button Width="96" Padding="12,0" Margin="0,0,8,0"
+                        Command="{Binding DataContext.ConfirmDeleteCommand,
+                                          RelativeSource={RelativeSource AncestorType=Window}}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
+                            <Setter Property="Content" Value="确认删除"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.ConfirmDeleteCommand.IsExecuting,
+                                                               RelativeSource={RelativeSource AncestorType=Window}}"
+                                             Value="True">
+                                    <Setter Property="Content" Value="正在删除…"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="取消" Width="64"
                         Style="{StaticResource DefaultButton}"
                         Command="{Binding DataContext.CancelDeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>

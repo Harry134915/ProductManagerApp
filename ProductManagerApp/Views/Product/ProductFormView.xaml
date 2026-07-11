@@ -266,15 +266,39 @@
                            VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="添加商品" Width="92" Margin="0,0,8,0"
-                        Style="{StaticResource PrimaryButton}"
-                        Command="{Binding DataContext.AddCommand,
-                                  RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <Button Width="92" Padding="12,0" Margin="0,0,8,0"
+                            Command="{Binding DataContext.AddCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                <Setter Property="Content" Value="添加商品"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.AddCommand.IsExecuting,
+                                                                   RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Value="True">
+                                        <Setter Property="Content" Value="正在添加…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
-                    <Button Content="更新商品" Width="92" Margin="0,0,8,0"
-                        Style="{StaticResource PrimaryButton}"
-                        Command="{Binding DataContext.UpdateCommand,
-                                  RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <Button Width="92" Padding="12,0" Margin="0,0,8,0"
+                            Command="{Binding DataContext.UpdateCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                <Setter Property="Content" Value="更新商品"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.UpdateCommand.IsExecuting,
+                                                                   RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Value="True">
+                                        <Setter Property="Content" Value="正在更新…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <Button Content="删除商品" Width="92" Margin="0,0,16,0"
                         Style="{StaticResource DangerButton}"
@@ -288,10 +312,22 @@
                         Command="{Binding DataContext.ClearFormCommand,
                                   RelativeSource={RelativeSource AncestorType=Window}}"/>
 
-                    <Button Content="刷新" Width="72"
-                        Style="{StaticResource DefaultButton}"
-                        Command="{Binding DataContext.RefreshCommand,
-                                  RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <Button Width="80" Padding="8,0"
+                            Command="{Binding DataContext.RefreshCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource DefaultButton}">
+                                <Setter Property="Content" Value="刷新"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.RefreshCommand.IsExecuting,
+                                                                   RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Value="True">
+                                        <Setter Property="Content" Value="正在刷新…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </Grid>
 
