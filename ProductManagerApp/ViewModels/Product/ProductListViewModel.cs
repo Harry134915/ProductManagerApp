@@ -1,5 +1,6 @@
 using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.DTO;
+using ProductManagerApp.Infrastructure.Commands;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -12,17 +13,24 @@ namespace ProductManagerApp.ViewModels
             "商品列表加载失败，请稍后重试。";
 
         private readonly IProductService _service;
+        private readonly ObservableCollection<ProductQueryDto> _filteredProducts = new();
         private bool _isRefreshing;
         private bool _hasLoaded;
         private int _loadVersion;
         private string _loadingMessage = "正在加载商品列表...";
         private string? _loadErrorMessage;
+        private string _searchText = string.Empty;
         private ProductQueryDto? _selectedProduct;
 
         public ProductListViewModel(IProductService service)
         {
             _service = service;
             Products = new ObservableCollection<ProductQueryDto>();
+            FilteredProducts = new ReadOnlyObservableCollection<ProductQueryDto>(
+                _filteredProducts);
+            ClearSearchCommand = new RelayCommand(
+                _ => SearchText = string.Empty,
+                _ => SearchText.Length > 0);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -30,6 +38,22 @@ namespace ProductManagerApp.ViewModels
         public event Action<ProductQueryDto?>? SelectedProductChanged;
 
         public ObservableCollection<ProductQueryDto> Products { get; }
+        public ReadOnlyObservableCollection<ProductQueryDto> FilteredProducts { get; }
+        public RelayCommand ClearSearchCommand { get; }
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                var newValue = value ?? string.Empty;
+                if (_searchText == newValue) return;
+
+                _searchText = newValue;
+                OnPropertyChanged();
+                ApplySearch();
+            }
+        }
 
         public ProductQueryDto? SelectedProduct
         {
@@ -55,6 +79,7 @@ namespace ProductManagerApp.ViewModels
                 _isRefreshing = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsEmpty));
+                NotifySearchStateChanged();
                 StateChanged?.Invoke();
             }
         }
@@ -69,6 +94,7 @@ namespace ProductManagerApp.ViewModels
                 _hasLoaded = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsEmpty));
+                NotifySearchStateChanged();
             }
         }
 
@@ -95,10 +121,30 @@ namespace ProductManagerApp.ViewModels
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(HasLoadError));
                 OnPropertyChanged(nameof(IsEmpty));
+                NotifySearchStateChanged();
             }
         }
 
         public bool HasLoadError => !string.IsNullOrWhiteSpace(LoadErrorMessage);
+
+        public bool HasActiveSearch => !string.IsNullOrWhiteSpace(SearchText);
+
+        public int FilteredProductCount => FilteredProducts.Count;
+
+        public string ResultCountText => HasActiveSearch
+            ? $"显示 {FilteredProductCount} / 共 {Products.Count} 条"
+            : $"共 {Products.Count} 条";
+
+        public bool HasNoSearchResults =>
+            HasLoaded &&
+            !IsRefreshing &&
+            !HasLoadError &&
+            Products.Count > 0 &&
+            HasActiveSearch &&
+            FilteredProductCount == 0;
+
+        public string NoSearchResultsMessage =>
+            $"未找到与“{SearchText.Trim()}”匹配的商品";
 
         public bool IsEmpty =>
             HasLoaded && !IsRefreshing && !HasLoadError && Products.Count == 0;
@@ -131,12 +177,18 @@ namespace ProductManagerApp.ViewModels
                     Products.Add(product);
                 }
 
-                SelectedProduct = selectedProductId.HasValue
+                RefreshFilteredProducts();
+
+                var refreshedSelection = selectedProductId.HasValue
                     ? Products.FirstOrDefault(product => product.Id == selectedProductId.Value)
+                    : null;
+                SelectedProduct = refreshedSelection != null && MatchesSearch(refreshedSelection)
+                    ? refreshedSelection
                     : null;
 
                 HasLoaded = true;
                 OnPropertyChanged(nameof(IsEmpty));
+                NotifySearchStateChanged();
             }
             catch (OperationCanceledException)
             {
@@ -158,8 +210,58 @@ namespace ProductManagerApp.ViewModels
                 {
                     IsRefreshing = false;
                     OnPropertyChanged(nameof(IsEmpty));
+                    NotifySearchStateChanged();
                 }
             }
+        }
+
+        private void ApplySearch()
+        {
+            RefreshFilteredProducts();
+
+            if (SelectedProduct != null && !MatchesSearch(SelectedProduct))
+            {
+                SelectedProduct = null;
+            }
+
+            ClearSearchCommand.RaiseCanExecuteChanged();
+            NotifySearchStateChanged();
+        }
+
+        private void RefreshFilteredProducts()
+        {
+            _filteredProducts.Clear();
+
+            foreach (var product in Products.Where(MatchesSearch))
+            {
+                _filteredProducts.Add(product);
+            }
+        }
+
+        private bool MatchesSearch(object item)
+        {
+            if (item is not ProductQueryDto product)
+            {
+                return false;
+            }
+
+            var keyword = SearchText.Trim();
+            if (keyword.Length == 0)
+            {
+                return true;
+            }
+
+            return product.Code.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || product.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void NotifySearchStateChanged()
+        {
+            OnPropertyChanged(nameof(HasActiveSearch));
+            OnPropertyChanged(nameof(FilteredProductCount));
+            OnPropertyChanged(nameof(ResultCountText));
+            OnPropertyChanged(nameof(HasNoSearchResults));
+            OnPropertyChanged(nameof(NoSearchResultsMessage));
         }
 
         private string GetDefaultLoadingMessage()

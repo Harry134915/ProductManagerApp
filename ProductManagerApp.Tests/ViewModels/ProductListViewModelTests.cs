@@ -168,13 +168,144 @@ public class ProductListViewModelTests
         Assert.Equal("Phone Pro", viewModel.SelectedProduct.Name);
     }
 
-    private static ProductQueryDto CreateProduct()
+    [Theory]
+    [InlineData(" p001 ", 1)]
+    [InlineData(" PHONE ", 1)]
+    [InlineData("accessory", 2)]
+    public async Task SearchText_FiltersCodeAndNameIgnoringCaseAndOuterSpaces(
+        string searchText,
+        int expectedProductId)
+    {
+        var service = CreateSearchService();
+        var viewModel = new ProductListViewModel(service);
+        await viewModel.LoadAsync();
+
+        viewModel.SearchText = searchText;
+
+        var visibleProduct = Assert.Single(GetVisibleProducts(viewModel));
+        Assert.Equal(expectedProductId, visibleProduct.Id);
+        Assert.Equal(3, viewModel.Products.Count);
+        Assert.Equal(1, viewModel.FilteredProductCount);
+        Assert.Equal("显示 1 / 共 3 条", viewModel.ResultCountText);
+    }
+
+    [Fact]
+    public async Task SearchText_WithNoMatch_ShowsSearchEmptyStateWithoutChangingSource()
+    {
+        var viewModel = new ProductListViewModel(CreateSearchService());
+        await viewModel.LoadAsync();
+
+        viewModel.SearchText = "missing";
+
+        Assert.Empty(GetVisibleProducts(viewModel));
+        Assert.Equal(3, viewModel.Products.Count);
+        Assert.True(viewModel.HasNoSearchResults);
+        Assert.False(viewModel.IsEmpty);
+        Assert.Equal("未找到与“missing”匹配的商品", viewModel.NoSearchResultsMessage);
+    }
+
+    [Fact]
+    public async Task ClearSearchCommand_RestoresAllProducts()
+    {
+        var viewModel = new ProductListViewModel(CreateSearchService());
+        await viewModel.LoadAsync();
+        viewModel.SearchText = "phone";
+
+        Assert.True(viewModel.ClearSearchCommand.CanExecute(null));
+        viewModel.ClearSearchCommand.Execute(null);
+
+        Assert.Equal(string.Empty, viewModel.SearchText);
+        Assert.False(viewModel.HasActiveSearch);
+        Assert.False(viewModel.ClearSearchCommand.CanExecute(null));
+        Assert.Equal(3, GetVisibleProducts(viewModel).Count);
+        Assert.Equal("共 3 条", viewModel.ResultCountText);
+    }
+
+    [Fact]
+    public async Task ClearSearchCommand_WithWhitespaceText_RemainsAvailable()
+    {
+        var viewModel = new ProductListViewModel(CreateSearchService());
+        await viewModel.LoadAsync();
+        viewModel.SearchText = "   ";
+
+        Assert.False(viewModel.HasActiveSearch);
+        Assert.True(viewModel.ClearSearchCommand.CanExecute(null));
+
+        viewModel.ClearSearchCommand.Execute(null);
+
+        Assert.Equal(string.Empty, viewModel.SearchText);
+        Assert.False(viewModel.ClearSearchCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task LoadAsync_WithActiveSearch_PreservesSearchAndFiltersRefreshedData()
+    {
+        var products = new List<ProductQueryDto>
+        {
+            CreateProduct(1, "P001", "Phone")
+        };
+        var service = new StubProductService
+        {
+            GetAllProductsHandler = () => products.ToList()
+        };
+        var viewModel = new ProductListViewModel(service);
+        await viewModel.LoadAsync();
+        viewModel.SearchText = " phone ";
+
+        products = new List<ProductQueryDto>
+        {
+            CreateProduct(1, "P001", "Phone Pro"),
+            CreateProduct(2, "A001", "Accessory")
+        };
+        await viewModel.LoadAsync();
+
+        Assert.Equal(" phone ", viewModel.SearchText);
+        var visibleProduct = Assert.Single(GetVisibleProducts(viewModel));
+        Assert.Equal("Phone Pro", visibleProduct.Name);
+        Assert.Equal(2, viewModel.Products.Count);
+        Assert.Equal("显示 1 / 共 2 条", viewModel.ResultCountText);
+    }
+
+    [Fact]
+    public async Task SearchText_WhenSelectedProductIsFilteredOut_ClearsSelection()
+    {
+        var viewModel = new ProductListViewModel(CreateSearchService());
+        await viewModel.LoadAsync();
+        viewModel.SelectedProduct = viewModel.Products.Single(product => product.Id == 2);
+
+        viewModel.SearchText = "P001";
+
+        Assert.Null(viewModel.SelectedProduct);
+    }
+
+    private static StubProductService CreateSearchService()
+    {
+        return new StubProductService
+        {
+            GetAllProductsHandler = () => new List<ProductQueryDto>
+            {
+                CreateProduct(1, "P001", "Phone"),
+                CreateProduct(2, "A001", "Accessory"),
+                CreateProduct(3, "T001", "Tablet")
+            }
+        };
+    }
+
+    private static List<ProductQueryDto> GetVisibleProducts(ProductListViewModel viewModel)
+    {
+        return viewModel.FilteredProducts.ToList();
+    }
+
+    private static ProductQueryDto CreateProduct(
+        int id = 1,
+        string code = "P001",
+        string name = "Phone")
     {
         return new ProductQueryDto
         {
-            Id = 1,
-            Code = "P001",
-            Name = "Phone",
+            Id = id,
+            Code = code,
+            Name = name,
             Price = 1999m,
             Stock = 10,
             Description = "Flagship phone"
