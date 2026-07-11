@@ -77,9 +77,55 @@ public class MainWindowViewModelTests
         }
     }
 
-    private static MainWindowViewModel CreateViewModel()
+    [Fact]
+    public void AddCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
     {
         var repository = new FakeProductRepository();
+        var viewModel = CreateViewModel(repository);
+
+        try
+        {
+            viewModel.AddCommand.Execute(null);
+
+            Assert.True(viewModel.Form.HasErrors);
+            Assert.Equal(0, repository.AddProductCallCount);
+            Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
+            Assert.False(viewModel.AddCommand.IsExecuting);
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public void UpdateCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
+    {
+        var repository = new FakeProductRepository();
+        var viewModel = CreateViewModel(repository);
+
+        try
+        {
+            viewModel.List.SelectedProduct = CreateProduct();
+            viewModel.Form.Price = "0";
+
+            viewModel.UpdateCommand.Execute(null);
+
+            Assert.True(viewModel.Form.HasErrors);
+            Assert.Equal(0, repository.UpdateProductCallCount);
+            Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
+            Assert.False(viewModel.UpdateCommand.IsExecuting);
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    private static MainWindowViewModel CreateViewModel(
+        FakeProductRepository? repository = null)
+    {
+        repository ??= new FakeProductRepository();
         var service = new ProductService(repository, new ProductValidator());
         return new MainWindowViewModel(service);
     }

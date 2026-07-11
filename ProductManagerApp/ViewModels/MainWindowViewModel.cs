@@ -112,7 +112,7 @@ namespace ProductManagerApp.ViewModels
 
             AddCommand = new AsyncRelayCommand(
                 _ => AddProduct(),
-                _ => List.SelectedProduct == null && Form.CanAdd()
+                _ => List.SelectedProduct == null
             );
 
             RefreshCommand = new AsyncRelayCommand(
@@ -122,7 +122,7 @@ namespace ProductManagerApp.ViewModels
 
             UpdateCommand = new AsyncRelayCommand(
                 _ => UpdateProduct(),
-                _ => Form.CanUpdate(List.SelectedProduct != null)
+                _ => List.SelectedProduct != null
             );
 
             DeleteCommand = new RelayCommand(
@@ -227,13 +227,17 @@ namespace ProductManagerApp.ViewModels
 
         private async Task AddProduct()
         {
+            ErrorMessage = string.Empty;
+            if (!Form.ValidateForSubmit())
+            {
+                return;
+            }
+
             var operationCts = BeginOperation();
             var token = operationCts.Token;
 
             try
             {
-                ErrorMessage = string.Empty;
-
                 await Task.Run(() => _service.AddProduct(Form.ToCreateDto()), token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = "添加成功！";
@@ -274,6 +278,11 @@ namespace ProductManagerApp.ViewModels
                 if (List.SelectedProduct == null)
                 {
                     ErrorMessage = "请先选择商品";
+                    return;
+                }
+
+                if (!Form.ValidateForSubmit())
+                {
                     return;
                 }
 

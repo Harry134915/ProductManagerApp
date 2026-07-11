@@ -1,117 +1,109 @@
-﻿using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.DTO;
+using ProductManagerApp.Infrastructure.Exceptions;
+using System.Collections;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace ProductManagerApp.ViewModels
 {
-    public class ProductFormViewModel : INotifyPropertyChanged
+    public class ProductFormViewModel : INotifyPropertyChanged, INotifyDataErrorInfo
     {
+        private static readonly string[] ValidatedProperties =
+        {
+            nameof(Code),
+            nameof(Name),
+            nameof(Price),
+            nameof(Stock),
+            nameof(Description)
+        };
+
+        private readonly Dictionary<string, string> _errors = new();
+        private readonly HashSet<string> _validatedProperties = new();
+
+        private string? _code;
+        private string? _name;
+        private string? _price;
+        private string? _stock;
+        private string? _description;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
+        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event Action? StateChanged;
-        protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-        private string? _code;
+        public event Action<string>? FocusRequested;
+
+        public bool HasErrors => _errors.Count > 0;
+
         public string? Code
         {
             get => _code;
-            set
-            {
-                _code = value;
-                OnPropertyChanged();
-                StateChanged?.Invoke();
-            }
+            set => SetField(ref _code, value);
         }
 
-        private string? _name;
         public string? Name
         {
             get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged();
-                StateChanged?.Invoke();
-            }
+            set => SetField(ref _name, value);
         }
 
-        private string? _price;
         public string? Price
         {
             get => _price;
-            set
-            {
-                _price = value;
-                OnPropertyChanged();
-                StateChanged?.Invoke();
-            }
+            set => SetField(ref _price, value);
         }
 
-        private string? _stock;
         public string? Stock
         {
             get => _stock;
-            set
-            {
-                _stock = value;
-                OnPropertyChanged();
-                StateChanged?.Invoke();
-            }
+            set => SetField(ref _stock, value);
         }
 
-        private string? _description;
         public string? Description
         {
             get => _description;
-            set
+            set => SetField(ref _description, value);
+        }
+
+        public void ValidateField(string propertyName)
+        {
+            if (Array.IndexOf(ValidatedProperties, propertyName) < 0)
             {
-                _description = value;
-                OnPropertyChanged();
-                StateChanged?.Invoke();
+                return;
             }
-        }
-        public bool CanAdd()
-        {
-            if (string.IsNullOrWhiteSpace(Code))
-                return false;
 
-            if (string.IsNullOrWhiteSpace(Name))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Price))
-                return false;
-
-            if (!decimal.TryParse(Price, out _))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(Stock))
-                return false;
-
-            if (!int.TryParse(Stock, out _))
-                return false;
-
-            return true;
+            _validatedProperties.Add(propertyName);
+            ValidateProperty(propertyName);
         }
 
-        public bool CanUpdate(bool hasSelected)
+        public bool ValidateForSubmit()
         {
-            if (!hasSelected)
-                return false;
+            foreach (var propertyName in ValidatedProperties)
+            {
+                _validatedProperties.Add(propertyName);
+                ValidateProperty(propertyName);
+            }
 
-            if (string.IsNullOrWhiteSpace(Name))
-                return false;
+            var firstInvalidProperty = ValidatedProperties
+                .FirstOrDefault(propertyName => _errors.ContainsKey(propertyName));
 
-            if (!decimal.TryParse(Price, out _))
-                return false;
+            if (firstInvalidProperty == null)
+            {
+                return true;
+            }
 
-            if (!int.TryParse(Stock, out _))
-                return false;
+            FocusRequested?.Invoke(firstInvalidProperty);
+            return false;
+        }
 
-            return true;
+        public IEnumerable GetErrors(string? propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                return _errors.Values.ToArray();
+            }
+
+            return _errors.TryGetValue(propertyName, out var error)
+                ? new[] { error }
+                : Array.Empty<string>();
         }
 
         public bool HasInput()
@@ -172,19 +164,146 @@ namespace ProductManagerApp.ViewModels
             if (dto == null)
                 return;
 
+            ClearValidation();
             Code = dto.Code ?? string.Empty;
             Name = dto.Name ?? string.Empty;
             Price = dto.Price.ToString();
             Stock = dto.Stock.ToString();
             Description = dto.Description ?? string.Empty;
         }
+
         public void Clear()
         {
-            Code = "";
-            Name = "";
-            Price = "";
-            Stock = "";
-            Description = "";
+            ClearValidation();
+            Code = string.Empty;
+            Name = string.Empty;
+            Price = string.Empty;
+            Stock = string.Empty;
+            Description = string.Empty;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        private void SetField(
+            ref string? field,
+            string? value,
+            [CallerMemberName] string propertyName = "")
+        {
+            if (field == value)
+            {
+                return;
+            }
+
+            field = value;
+            OnPropertyChanged(propertyName);
+
+            if (_validatedProperties.Contains(propertyName))
+            {
+                ValidateProperty(propertyName);
+            }
+
+            StateChanged?.Invoke();
+        }
+
+        private void ValidateProperty(string propertyName)
+        {
+            SetError(propertyName, GetValidationMessage(propertyName));
+        }
+
+        private string? GetValidationMessage(string propertyName)
+        {
+            return propertyName switch
+            {
+                nameof(Code) when string.IsNullOrWhiteSpace(Code) =>
+                    "请输入商品编码。",
+                nameof(Name) when string.IsNullOrWhiteSpace(Name) =>
+                    "请输入商品名称。",
+                nameof(Price) => GetPriceValidationMessage(),
+                nameof(Stock) => GetStockValidationMessage(),
+                nameof(Description) when string.IsNullOrWhiteSpace(Description) =>
+                    "请输入商品描述，且不能只包含空格。",
+                _ => null
+            };
+        }
+
+        private string? GetPriceValidationMessage()
+        {
+            if (string.IsNullOrWhiteSpace(Price))
+            {
+                return "请输入价格。";
+            }
+
+            if (!decimal.TryParse(Price, out var price))
+            {
+                return "请输入有效数字，例如 99.90。";
+            }
+
+            return price <= 0 ? "价格必须大于 0。" : null;
+        }
+
+        private string? GetStockValidationMessage()
+        {
+            if (string.IsNullOrWhiteSpace(Stock))
+            {
+                return "请输入库存数量。";
+            }
+
+            if (!int.TryParse(Stock, out var stock))
+            {
+                return "库存必须是整数，例如 10。";
+            }
+
+            return stock < 0 ? "库存不能小于 0。" : null;
+        }
+
+        private void SetError(string propertyName, string? error)
+        {
+            var hasExistingError = _errors.TryGetValue(propertyName, out var existingError);
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (!hasExistingError)
+                {
+                    return;
+                }
+
+                _errors.Remove(propertyName);
+            }
+            else
+            {
+                if (hasExistingError && existingError == error)
+                {
+                    return;
+                }
+
+                _errors[propertyName] = error;
+            }
+
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+            OnPropertyChanged(nameof(HasErrors));
+        }
+
+        private void ClearValidation()
+        {
+            _validatedProperties.Clear();
+
+            if (_errors.Count == 0)
+            {
+                return;
+            }
+
+            var propertiesWithErrors = _errors.Keys.ToArray();
+            _errors.Clear();
+
+            foreach (var propertyName in propertiesWithErrors)
+            {
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+            }
+
+            OnPropertyChanged(nameof(HasErrors));
         }
     }
 }
