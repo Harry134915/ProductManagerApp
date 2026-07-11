@@ -1,6 +1,7 @@
 using ProductManagerApp.BLL.Services;
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DTO;
+using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.Tests.Fakes;
 using ProductManagerApp.ViewModels;
 
@@ -86,6 +87,7 @@ public class MainWindowViewModelTests
     public async Task RefreshCommand_WithSelectedProduct_PreservesEditModeAndDisablesAdd()
     {
         var repository = new FakeProductRepository();
+        var logger = new FakeAppLogger();
         repository.Products.Add(new ProductManagerApp.Entity.Product
         {
             Id = 1,
@@ -95,7 +97,7 @@ public class MainWindowViewModelTests
             Stock = 10,
             Description = "Flagship phone"
         });
-        var viewModel = CreateViewModel(repository);
+        var viewModel = CreateViewModel(repository, logger);
 
         try
         {
@@ -110,6 +112,10 @@ public class MainWindowViewModelTests
             Assert.Equal(1, viewModel.List.SelectedProduct.Id);
             Assert.Equal("P001", viewModel.Form.Code);
             Assert.False(viewModel.AddCommand.CanExecute(null));
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Information"
+                    && entry.Message == "刷新商品列表完成，共 1 条商品。");
         }
         finally
         {
@@ -121,7 +127,8 @@ public class MainWindowViewModelTests
     public async Task AddCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
     {
         var repository = new FakeProductRepository();
-        var viewModel = CreateViewModel(repository);
+        var logger = new FakeAppLogger();
+        var viewModel = CreateViewModel(repository, logger);
 
         try
         {
@@ -132,6 +139,10 @@ public class MainWindowViewModelTests
             Assert.Equal(0, repository.AddProductCallCount);
             Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
             Assert.False(viewModel.AddCommand.IsExecuting);
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Warning"
+                    && entry.Message == "新增商品提交未通过表单校验。");
         }
         finally
         {
@@ -143,7 +154,8 @@ public class MainWindowViewModelTests
     public async Task AddCommand_WithValidForm_ClearsFormAndFocusesCode()
     {
         var repository = new FakeProductRepository();
-        var viewModel = CreateViewModel(repository);
+        var logger = new FakeAppLogger();
+        var viewModel = CreateViewModel(repository, logger);
 
         try
         {
@@ -163,6 +175,10 @@ public class MainWindowViewModelTests
             Assert.Equal(nameof(ProductFormViewModel.Code), focusedProperty);
             Assert.Equal(string.Empty, viewModel.Form.Code);
             Assert.False(viewModel.IsEditMode);
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Information"
+                    && entry.Message == "新增商品成功，商品编码：P002。");
         }
         finally
         {
@@ -208,7 +224,8 @@ public class MainWindowViewModelTests
     public async Task UpdateCommand_WithInvalidForm_UsesInlineErrorsWithoutCallingRepository()
     {
         var repository = new FakeProductRepository();
-        var viewModel = CreateViewModel(repository);
+        var logger = new FakeAppLogger();
+        var viewModel = CreateViewModel(repository, logger);
 
         try
         {
@@ -222,6 +239,10 @@ public class MainWindowViewModelTests
             Assert.Equal(0, repository.UpdateProductCallCount);
             Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
             Assert.False(viewModel.UpdateCommand.IsExecuting);
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Warning"
+                    && entry.Message == "更新商品提交未通过表单校验。");
         }
         finally
         {
@@ -229,12 +250,190 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public async Task UpdateCommand_WithValidForm_LogsProductIdentifier()
+    {
+        var repository = new FakeProductRepository();
+        var logger = new FakeAppLogger();
+        repository.Products.Add(new ProductManagerApp.Entity.Product
+        {
+            Id = 1,
+            Code = "P001",
+            Name = "Phone",
+            Price = 1999m,
+            Stock = 10,
+            Description = "Flagship phone"
+        });
+        var viewModel = CreateViewModel(repository, logger);
+
+        try
+        {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
+            viewModel.List.SelectedProduct = Assert.Single(viewModel.List.Products);
+            viewModel.Form.Name = "Updated phone";
+
+            viewModel.UpdateCommand.Execute(null);
+            await WaitUntilAsync(() => !viewModel.UpdateCommand.IsExecuting);
+
+            Assert.Equal(1, repository.UpdateProductCallCount);
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Information"
+                    && entry.Message == "更新商品成功，商品 ID：1，商品编码：P001。");
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task ConfirmDeleteCommand_WhenSuccessful_LogsProductIdentifier()
+    {
+        var repository = new FakeProductRepository();
+        var logger = new FakeAppLogger();
+        repository.Products.Add(new ProductManagerApp.Entity.Product
+        {
+            Id = 1,
+            Code = "P001",
+            Name = "Phone",
+            Price = 1999m,
+            Stock = 10,
+            Description = "Flagship phone"
+        });
+        var viewModel = CreateViewModel(repository, logger);
+
+        try
+        {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
+            viewModel.List.SelectedProduct = Assert.Single(viewModel.List.Products);
+            viewModel.DeleteCommand.Execute(null);
+
+            viewModel.ConfirmDeleteCommand.Execute(null);
+            await WaitUntilAsync(() => !viewModel.ConfirmDeleteCommand.IsExecuting);
+
+            Assert.Equal(1, repository.DeleteProductCallCount);
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Information"
+                    && entry.Message == "删除商品成功，商品 ID：1，商品编码：P001。");
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task InitialLoad_WhenSuccessful_LogsProductCount()
+    {
+        var repository = new FakeProductRepository();
+        var logger = new FakeAppLogger();
+        repository.Products.Add(new ProductManagerApp.Entity.Product
+        {
+            Id = 1,
+            Code = "P001",
+            Name = "Phone",
+            Price = 1999m,
+            Stock = 10,
+            Description = "Flagship phone"
+        });
+        var viewModel = CreateViewModel(repository, logger);
+
+        try
+        {
+            await WaitUntilAsync(() => logger.Entries.Any(
+                entry => entry.Message.StartsWith("商品列表初始加载完成", StringComparison.Ordinal)));
+
+            Assert.Contains(
+                logger.Entries,
+                entry => entry.Level == "Information"
+                    && entry.Message == "商品列表初始加载完成，共 1 条商品。");
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task InitialLoad_WhenDatabaseFails_LogsExceptionAndShowsFriendlyMessage()
+    {
+        var dataAccessException = new DataAccessException(
+            "查询商品列表失败，数据库访问异常。",
+            new InvalidOperationException("database details"));
+        var repository = new FakeProductRepository
+        {
+            GetAllProductsException = dataAccessException
+        };
+        var logger = new FakeAppLogger();
+        var viewModel = CreateViewModel(repository, logger);
+
+        try
+        {
+            await WaitUntilAsync(() => logger.Entries.Any(entry => entry.Level == "Error"));
+
+            var entry = Assert.Single(logger.Entries, item => item.Level == "Error");
+            Assert.Equal("初始加载商品列表时数据库访问失败。", entry.Message);
+            Assert.Same(dataAccessException, entry.Exception);
+            Assert.Equal(
+                "数据库访问失败，请检查数据库文件或稍后重试。",
+                viewModel.ErrorMessage);
+            Assert.DoesNotContain("database details", viewModel.ErrorMessage);
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task CancelOperations_DuringInitialLoad_LogsInformationWithoutUserError()
+    {
+        using var started = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var service = new StubProductService
+        {
+            GetAllProductsHandler = () =>
+            {
+                started.Set();
+                release.Wait();
+                return new List<ProductQueryDto>();
+            }
+        };
+        var logger = new FakeAppLogger();
+        var viewModel = new MainWindowViewModel(service, logger);
+
+        try
+        {
+            Assert.True(started.Wait(TimeSpan.FromSeconds(1)));
+            viewModel.CancelOperations();
+            release.Set();
+
+            await WaitUntilAsync(() => logger.Entries.Any(
+                entry => entry.Level == "Information"));
+
+            var entry = Assert.Single(
+                logger.Entries,
+                item => item.Level == "Information");
+            Assert.Equal("初始加载商品列表操作已取消。", entry.Message);
+            Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
+        }
+        finally
+        {
+            release.Set();
+            viewModel.CancelOperations();
+        }
+    }
+
     private static MainWindowViewModel CreateViewModel(
-        FakeProductRepository? repository = null)
+        FakeProductRepository? repository = null,
+        FakeAppLogger? logger = null)
     {
         repository ??= new FakeProductRepository();
+        logger ??= new FakeAppLogger();
         var service = new ProductService(repository, new ProductValidator());
-        return new MainWindowViewModel(service);
+        return new MainWindowViewModel(service, logger);
     }
 
     private static ProductQueryDto CreateProduct()
@@ -258,5 +457,21 @@ public class MainWindowViewModelTests
         {
             await Task.Delay(10, cancellationTokenSource.Token);
         }
+    }
+
+    private sealed class StubProductService : ProductManagerApp.BLL.Interfaces.IProductService
+    {
+        public required Func<List<ProductQueryDto>> GetAllProductsHandler { get; init; }
+
+        public List<ProductQueryDto> GetAllProducts() => GetAllProductsHandler();
+
+        public void AddProduct(ProductCreateDto dto) => throw new NotSupportedException();
+
+        public void DeleteProduct(int productId) => throw new NotSupportedException();
+
+        public void UpdateProduct(ProductUpdateDto dto) => throw new NotSupportedException();
+
+        public void UpdateProductPrice(int productId, decimal newPrice) =>
+            throw new NotSupportedException();
     }
 }

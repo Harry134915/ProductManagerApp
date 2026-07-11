@@ -1,8 +1,8 @@
 ﻿using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.BLL.Interfaces;
 using ProductManagerApp.Infrastructure.Commands;
+using ProductManagerApp.Infrastructure.Logging;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 
@@ -14,6 +14,7 @@ namespace ProductManagerApp.ViewModels
         private const string DatabaseErrorMessage = "数据库访问失败，请检查数据库文件或稍后重试。";
         private DispatcherTimer? _statusTimer;
         private readonly IProductService _service;
+        private readonly IAppLogger _logger;
         public event PropertyChangedEventHandler? PropertyChanged;
 
 
@@ -92,9 +93,10 @@ namespace ProductManagerApp.ViewModels
         public AsyncRelayCommand RefreshCommand { get; }
         public RelayCommand ClearFormCommand { get; }
         public RelayCommand EscapeCommand { get; }
-        public MainWindowViewModel(IProductService service)
+        public MainWindowViewModel(IProductService service, IAppLogger logger)
         {
-            _service = service;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             List = new ProductListViewModel(service);
             Form = new ProductFormViewModel();
             DeleteConfirm = new DeleteConfirmViewModel();
@@ -219,19 +221,21 @@ namespace ProductManagerApp.ViewModels
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = $"刷新完成，共{List.Products.Count}条商品";
+                _logger.LogInformation(
+                    $"刷新商品列表完成，共 {List.Products.Count} 条商品。");
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Debug.WriteLine("刷新操作已取消。");
+                _logger.LogInformation("刷新商品列表操作已取消。");
             }
             catch (DataAccessException ex)
             {
-                Debug.WriteLine($"刷新失败: {ex}");
+                _logger.LogError("刷新商品列表时数据库访问失败。", ex);
                 ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"刷新失败: {ex}");
+                _logger.LogError("刷新商品列表时发生未处理异常。", ex);
                 ErrorMessage = "刷新失败，请稍后再试！";
             }
             finally
@@ -246,6 +250,7 @@ namespace ProductManagerApp.ViewModels
             ErrorMessage = string.Empty;
             if (!Form.TryCreateDto(out var dto) || dto == null)
             {
+                _logger.LogWarning("新增商品提交未通过表单校验。");
                 return;
             }
 
@@ -261,20 +266,26 @@ namespace ProductManagerApp.ViewModels
                 token.ThrowIfCancellationRequested();
                 ResetFormToCreateMode();
                 Form.RequestFocus(nameof(ProductFormViewModel.Code));
+                _logger.LogInformation(
+                    $"新增商品成功，商品编码：{dto.Code}。");
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Debug.WriteLine("添加操作已取消。");
+                _logger.LogInformation("新增商品操作已取消。");
             }
-            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (ProductValidationException ex)
+            {
+                _logger.LogWarning($"新增商品未完成：{ex.Message}");
+                ErrorMessage = ex.Message;
+            }
             catch (DataAccessException ex)
             {
-                Debug.WriteLine($"添加失败: {ex}");
+                _logger.LogError("新增商品时数据库访问失败。", ex);
                 ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"添加失败: {ex}");
+                _logger.LogError("新增商品时发生未处理异常。", ex);
                 ErrorMessage = "系统异常，请稍后再试！";
             }
             finally
@@ -294,12 +305,14 @@ namespace ProductManagerApp.ViewModels
 
                 if (List.SelectedProduct == null)
                 {
+                    _logger.LogWarning("更新商品未完成：未选择商品。");
                     ErrorMessage = "请先选择商品";
                     return;
                 }
 
                 if (!Form.TryUpdateDto(List.SelectedProduct, out var dto) || dto == null)
                 {
+                    _logger.LogWarning("更新商品提交未通过表单校验。");
                     return;
                 }
 
@@ -312,20 +325,26 @@ namespace ProductManagerApp.ViewModels
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
                 ResetFormToCreateMode();
+                _logger.LogInformation(
+                    $"更新商品成功，商品 ID：{dto.Id}，商品编码：{dto.Code}。");
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Debug.WriteLine("更新操作已取消。");
+                _logger.LogInformation("更新商品操作已取消。");
             }
-            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (ProductValidationException ex)
+            {
+                _logger.LogWarning($"更新商品未完成：{ex.Message}");
+                ErrorMessage = ex.Message;
+            }
             catch (DataAccessException ex)
             {
-                Debug.WriteLine($"更新失败: {ex}");
+                _logger.LogError("更新商品时数据库访问失败。", ex);
                 ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"更新失败: {ex}");
+                _logger.LogError("更新商品时发生未处理异常。", ex);
                 ErrorMessage = "系统异常，请稍后再试！";
             }
             finally
@@ -361,20 +380,26 @@ namespace ProductManagerApp.ViewModels
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
                 ResetFormToCreateMode();
+                _logger.LogInformation(
+                    $"删除商品成功，商品 ID：{target.Id}，商品编码：{target.Code}。");
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Debug.WriteLine("删除操作已取消。");
+                _logger.LogInformation("删除商品操作已取消。");
             }
-            catch (ProductValidationException ex) { ErrorMessage = ex.Message; }
+            catch (ProductValidationException ex)
+            {
+                _logger.LogWarning($"删除商品未完成：{ex.Message}");
+                ErrorMessage = ex.Message;
+            }
             catch (DataAccessException ex)
             {
-                Debug.WriteLine($"删除失败: {ex}");
+                _logger.LogError("删除商品时数据库访问失败。", ex);
                 ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"删除失败: {ex}");
+                _logger.LogError("删除商品时发生未处理异常。", ex);
                 ErrorMessage = "删除失败，请稍后再试！";
             }
             finally
@@ -454,19 +479,22 @@ namespace ProductManagerApp.ViewModels
             try
             {
                 await List.LoadAsync(token);
+                token.ThrowIfCancellationRequested();
+                _logger.LogInformation(
+                    $"商品列表初始加载完成，共 {List.Products.Count} 条商品。");
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Debug.WriteLine("初始加载商品列表操作已取消。");
+                _logger.LogInformation("初始加载商品列表操作已取消。");
             }
             catch (DataAccessException ex)
             {
-                Debug.WriteLine($"初始加载商品列表失败: {ex}");
+                _logger.LogError("初始加载商品列表时数据库访问失败。", ex);
                 ErrorMessage = DatabaseErrorMessage;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"初始加载商品列表失败: {ex}");
+                _logger.LogError("初始加载商品列表时发生未处理异常。", ex);
                 ErrorMessage = "系统异常，请稍后再试！";
             }
             finally

@@ -20,9 +20,15 @@ internal sealed class FakeProductRepository : IProductRepository
     public int UpdateProductResult { get; set; } = 1;
     public int UpdateProductPriceResult { get; set; } = 1;
     public int DeleteProductResult { get; set; } = 1;
+    public Exception? GetAllProductsException { get; set; }
 
     public List<Product> GetAllProducts()
     {
+        if (GetAllProductsException != null)
+        {
+            throw GetAllProductsException;
+        }
+
         return Products.ToList();
     }
 

@@ -4,6 +4,7 @@ using ProductManagerApp.BLL.Services;
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DAL;
 using ProductManagerApp.DAL.Database;
+using ProductManagerApp.Infrastructure.Logging;
 using ProductManagerApp.ViewModels;
 using ProductManagerApp.Views;
 using System.Data.SQLite;
@@ -52,6 +53,8 @@ namespace ProductManagerApp
             services.AddTransient<IProductService, ProductService>();
             // 注册验证器
             services.AddTransient<ProductValidator>();
+            // 注册应用日志
+            services.AddSingleton<IAppLogger, DebugAppLogger>();
             // 注册 ViewModel
             services.AddTransient<MainWindowViewModel>();
             // 注册 View
