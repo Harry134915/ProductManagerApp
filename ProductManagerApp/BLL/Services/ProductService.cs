@@ -40,7 +40,12 @@ namespace ProductManagerApp.BLL.Services
                 throw new ProductValidationException($"商品编码“{entity.Code}”已存在，请使用其他编码。");
             }
 
-            _repo.AddProduct(entity);
+            var affected = _repo.AddProduct(entity);
+            if (affected == 0)
+            {
+                throw new ProductValidationException(
+                    "新增失败，未写入商品数据，请稍后重试。");
+            }
         }
 
         public void UpdateProduct(ProductUpdateDto dto)
@@ -59,7 +64,12 @@ namespace ProductManagerApp.BLL.Services
 
             _validator.Validate(entity);
 
-            _repo.UpdateProduct(entity);
+            var affected = _repo.UpdateProduct(entity);
+            if (affected == 0)
+            {
+                throw new ProductValidationException(
+                    "更新失败，商品可能已被删除，请刷新列表后重试。");
+            }
         }
 
         public void UpdateProductPrice(int productId, decimal newPrice)
@@ -77,7 +87,12 @@ namespace ProductManagerApp.BLL.Services
         {
             _validator.ValidateId(productId);
 
-            _repo.DeleteProduct(productId);
+            var affected = _repo.DeleteProduct(productId);
+            if (affected == 0)
+            {
+                throw new ProductValidationException(
+                    "删除失败，商品可能已被删除，请刷新列表后重试。");
+            }
         }
     }
 }

@@ -61,6 +61,23 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public void AddProduct_WhenNoRowsAffected_ThrowsValidationException()
+    {
+        var repo = new FakeProductRepository
+        {
+            AddProductResult = 0
+        };
+        var service = CreateService(repo);
+
+        var exception = Assert.Throws<ProductValidationException>(
+            () => service.AddProduct(CreateValidCreateDto()));
+
+        Assert.Equal("新增失败，未写入商品数据，请稍后重试。", exception.Message);
+        Assert.Equal(1, repo.AddProductCallCount);
+        Assert.Empty(repo.Products);
+    }
+
+    [Fact]
     public void AddProduct_WithDuplicateCode_ThrowsValidationExceptionAndDoesNotAdd()
     {
         var repo = new FakeProductRepository();
@@ -117,6 +134,25 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public void UpdateProduct_WhenNoRowsAffected_ThrowsValidationException()
+    {
+        var repo = new FakeProductRepository
+        {
+            UpdateProductResult = 0
+        };
+        repo.Products.Add(CreateExistingProduct());
+        var service = CreateService(repo);
+
+        var exception = Assert.Throws<ProductValidationException>(
+            () => service.UpdateProduct(CreateValidUpdateDto()));
+
+        Assert.Equal(
+            "更新失败，商品可能已被删除，请刷新列表后重试。",
+            exception.Message);
+        Assert.Equal(1, repo.UpdateProductCallCount);
+    }
+
+    [Fact]
     public void UpdateProductPrice_WhenNoRowsAffected_ThrowsValidationException()
     {
         var repo = new FakeProductRepository
@@ -147,6 +183,25 @@ public class ProductServiceTests
 
         service.DeleteProduct(1);
 
+        Assert.Equal(1, repo.DeleteProductCallCount);
+        Assert.Equal(1, repo.LastDeletedProductId);
+    }
+
+    [Fact]
+    public void DeleteProduct_WhenNoRowsAffected_ThrowsValidationException()
+    {
+        var repo = new FakeProductRepository
+        {
+            DeleteProductResult = 0
+        };
+        var service = CreateService(repo);
+
+        var exception = Assert.Throws<ProductValidationException>(
+            () => service.DeleteProduct(1));
+
+        Assert.Equal(
+            "删除失败，商品可能已被删除，请刷新列表后重试。",
+            exception.Message);
         Assert.Equal(1, repo.DeleteProductCallCount);
         Assert.Equal(1, repo.LastDeletedProductId);
     }

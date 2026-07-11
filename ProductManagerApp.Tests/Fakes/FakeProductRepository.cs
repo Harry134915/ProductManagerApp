@@ -41,7 +41,11 @@ internal sealed class FakeProductRepository : IProductRepository
     {
         AddProductCallCount++;
         LastAddedProduct = product;
-        Products.Add(product);
+        if (AddProductResult > 0)
+        {
+            Products.Add(product);
+        }
+
         return AddProductResult;
     }
 
