@@ -1,6 +1,5 @@
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DTO;
-using ProductManagerApp.Infrastructure.Exceptions;
 using System.Collections;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -137,48 +136,49 @@ namespace ProductManagerApp.ViewModels
                 || !string.IsNullOrWhiteSpace(Description);
         }
 
-        public ProductCreateDto ToCreateDto()
+        public bool TryCreateDto(out ProductCreateDto? dto)
         {
-            if (string.IsNullOrWhiteSpace(Code))
-                throw new ProductValidationException("编码不能为空!");
-            if (string.IsNullOrWhiteSpace(Name))
-                throw new ProductValidationException("名称不能为空!");
-            if (!decimal.TryParse(Price, out var price))
-                throw new ProductValidationException("价格格式错误!");
-            if (!int.TryParse(Stock, out var stock))
-                throw new ProductValidationException("库存格式错误!");
-
-            return new ProductCreateDto
+            if (!TryGetValidatedValues(out var price, out var stock))
             {
-                Code = Code,
-                Name = Name,
+                dto = null;
+                return false;
+            }
+
+            dto = new ProductCreateDto
+            {
+                Code = Code!,
+                Name = Name!,
                 Price = price,
                 Stock = stock,
-                Description = Description ?? string.Empty,
+                Description = Description!
             };
+
+            return true;
         }
 
-        public ProductUpdateDto ToUpdateDto(ProductQueryDto selected)
+        public bool TryUpdateDto(
+            ProductQueryDto selected,
+            out ProductUpdateDto? dto)
         {
-            if (selected == null)
-                throw new ArgumentException(nameof(selected));
+            ArgumentNullException.ThrowIfNull(selected);
 
-            if (string.IsNullOrWhiteSpace(Code))
-                throw new ProductValidationException("编码不能为空!");
-            if (!decimal.TryParse(Price, out var price))
-                throw new ProductValidationException("价格格式错误!");
-            if (!int.TryParse(Stock, out var stock))
-                throw new ProductValidationException("库存格式错误!");
+            if (!TryGetValidatedValues(out var price, out var stock))
+            {
+                dto = null;
+                return false;
+            }
 
-            return new ProductUpdateDto
+            dto = new ProductUpdateDto
             {
                 Id = selected.Id,
                 Code = selected.Code,
-                Name = Name ?? string.Empty,
+                Name = Name!,
                 Price = price,
                 Stock = stock,
-                Description = Description ?? string.Empty
+                Description = Description!
             };
+
+            return true;
         }
 
         public void FillFrom(ProductQueryDto? dto)
@@ -239,16 +239,12 @@ namespace ProductManagerApp.ViewModels
         {
             return propertyName switch
             {
-                nameof(Code) when string.IsNullOrWhiteSpace(Code) =>
-                    "请输入商品编码。",
-                nameof(Code) when !ProductCodeRules.IsValid(Code) =>
-                    ProductCodeRules.InvalidFormatMessage,
-                nameof(Name) when string.IsNullOrWhiteSpace(Name) =>
-                    "请输入商品名称。",
+                nameof(Code) => ProductValidationRules.GetCodeError(Code),
+                nameof(Name) => ProductValidationRules.GetNameError(Name),
                 nameof(Price) => GetPriceValidationMessage(),
                 nameof(Stock) => GetStockValidationMessage(),
-                nameof(Description) when string.IsNullOrWhiteSpace(Description) =>
-                    "请输入商品描述，且不能只包含空格。",
+                nameof(Description) =>
+                    ProductValidationRules.GetDescriptionError(Description),
                 _ => null
             };
         }
@@ -265,7 +261,7 @@ namespace ProductManagerApp.ViewModels
                 return "请输入有效数字，例如 99.90。";
             }
 
-            return price <= 0 ? "价格必须大于 0。" : null;
+            return ProductValidationRules.GetPriceError(price);
         }
 
         private string? GetStockValidationMessage()
@@ -280,7 +276,21 @@ namespace ProductManagerApp.ViewModels
                 return "库存必须是整数，例如 10。";
             }
 
-            return stock < 0 ? "库存不能小于 0。" : null;
+            return ProductValidationRules.GetStockError(stock);
+        }
+
+        private bool TryGetValidatedValues(out decimal price, out int stock)
+        {
+            if (!ValidateForSubmit())
+            {
+                price = default;
+                stock = default;
+                return false;
+            }
+
+            var hasValidPrice = decimal.TryParse(Price, out price);
+            var hasValidStock = int.TryParse(Stock, out stock);
+            return hasValidPrice && hasValidStock;
         }
 
         private void SetError(string propertyName, string? error)

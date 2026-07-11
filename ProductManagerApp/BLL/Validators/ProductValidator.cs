@@ -10,26 +10,11 @@ namespace ProductManagerApp.BLL.Validators
             if (product == null)
                 throw new ProductValidationException("商品不可为空!");
 
-            if (string.IsNullOrWhiteSpace(product.Name))
-                throw new ProductValidationException("商品名称不能为空！");
-
-            if (string.IsNullOrWhiteSpace(product.Code))
-                throw new ProductValidationException("商品编码不能为空！");
-
-            if (!ProductCodeRules.IsValid(product.Code))
-                throw new ProductValidationException(ProductCodeRules.InvalidFormatMessage);
-
-            if (product.Price <= 0)
-                throw new ProductValidationException("价格必须大于0！");
-
-            if (product.Stock < 0)
-                throw new ProductValidationException("库存不能为负数！");
-
-            if (product.Description != null &&
-                string.IsNullOrWhiteSpace(product.Description))
-            {
-                throw new ProductValidationException("描述不能只有空白字符！");
-            }
+            ThrowIfInvalid(ProductValidationRules.GetNameError(product.Name));
+            ThrowIfInvalid(ProductValidationRules.GetCodeError(product.Code));
+            ThrowIfInvalid(ProductValidationRules.GetPriceError(product.Price));
+            ThrowIfInvalid(ProductValidationRules.GetStockError(product.Stock));
+            ThrowIfInvalid(ProductValidationRules.GetDescriptionError(product.Description));
         }
 
         public void ValidateId(int id)
@@ -40,14 +25,21 @@ namespace ProductManagerApp.BLL.Validators
 
         public void ValidatePrice(decimal price)
         {
-            if (price <= 0)
-                throw new ProductValidationException("价格必须大于0！");
+            ThrowIfInvalid(ProductValidationRules.GetPriceError(price));
         }
 
         public void ValidateCodeUnchanged(string currentCode, string updateCode)
         {
             if (!string.Equals(currentCode, updateCode, StringComparison.Ordinal))
                 throw new ProductValidationException("商品编码不可修改！");
+        }
+
+        private static void ThrowIfInvalid(string? message)
+        {
+            if (message != null)
+            {
+                throw new ProductValidationException(message);
+            }
         }
     }
 }

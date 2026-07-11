@@ -1,3 +1,4 @@
+using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.ViewModels;
 
 namespace ProductManagerApp.Tests.ViewModels;
@@ -16,12 +17,16 @@ public class ProductFormViewModelTests
         Assert.False(isValid);
         Assert.True(viewModel.HasErrors);
         Assert.Equal(nameof(ProductFormViewModel.Code), focusedProperty);
-        Assert.Equal("请输入商品编码。", GetError(viewModel, nameof(ProductFormViewModel.Code)));
-        Assert.Equal("请输入商品名称。", GetError(viewModel, nameof(ProductFormViewModel.Name)));
+        Assert.Equal(
+            ProductValidationRules.CodeRequiredMessage,
+            GetError(viewModel, nameof(ProductFormViewModel.Code)));
+        Assert.Equal(
+            ProductValidationRules.NameRequiredMessage,
+            GetError(viewModel, nameof(ProductFormViewModel.Name)));
         Assert.Equal("请输入价格。", GetError(viewModel, nameof(ProductFormViewModel.Price)));
         Assert.Equal("请输入库存数量。", GetError(viewModel, nameof(ProductFormViewModel.Stock)));
         Assert.Equal(
-            "请输入商品描述，且不能只包含空格。",
+            ProductValidationRules.DescriptionRequiredMessage,
             GetError(viewModel, nameof(ProductFormViewModel.Description)));
     }
 
@@ -176,6 +181,63 @@ public class ProductFormViewModelTests
 
         Assert.Null(GetError(viewModel, nameof(ProductFormViewModel.Stock)));
         Assert.False(viewModel.HasErrors);
+    }
+
+    [Fact]
+    public void TryCreateDto_WithValidForm_ReturnsMappedDto()
+    {
+        var viewModel = CreateValidForm();
+
+        var success = viewModel.TryCreateDto(out var dto);
+
+        Assert.True(success);
+        Assert.NotNull(dto);
+        Assert.Equal("P001", dto.Code);
+        Assert.Equal("Phone", dto.Name);
+        Assert.Equal(1999.90m, dto.Price);
+        Assert.Equal(10, dto.Stock);
+        Assert.Equal("Flagship phone", dto.Description);
+    }
+
+    [Fact]
+    public void TryCreateDto_WithInvalidForm_ReturnsFalseAndNoDto()
+    {
+        var viewModel = new ProductFormViewModel();
+        string? focusedProperty = null;
+        viewModel.FocusRequested += propertyName => focusedProperty = propertyName;
+
+        var success = viewModel.TryCreateDto(out var dto);
+
+        Assert.False(success);
+        Assert.Null(dto);
+        Assert.Equal(nameof(ProductFormViewModel.Code), focusedProperty);
+        Assert.True(viewModel.HasErrors);
+    }
+
+    [Fact]
+    public void TryUpdateDto_WithValidForm_PreservesSelectedIdentity()
+    {
+        var viewModel = CreateValidForm();
+        var selected = new ProductManagerApp.DTO.ProductQueryDto
+        {
+            Id = 7,
+            Code = "P007",
+            Name = "Old name",
+            Price = 1m,
+            Stock = 1,
+            Description = "Old description"
+        };
+
+        var success = viewModel.TryUpdateDto(selected, out var dto);
+
+        Assert.True(success);
+        Assert.NotNull(dto);
+        Assert.Equal(7, dto.Id);
+        Assert.Equal("P007", dto.Code);
+        Assert.Equal("Phone", dto.Name);
+        Assert.Equal(1999.90m, dto.Price);
+        Assert.Equal(10, dto.Stock);
+        Assert.Equal("Flagship phone", dto.Description);
     }
 
     [Fact]

@@ -244,7 +244,7 @@ namespace ProductManagerApp.ViewModels
         private async Task AddProduct()
         {
             ErrorMessage = string.Empty;
-            if (!Form.ValidateForSubmit())
+            if (!Form.TryCreateDto(out var dto) || dto == null)
             {
                 return;
             }
@@ -254,7 +254,7 @@ namespace ProductManagerApp.ViewModels
 
             try
             {
-                await Task.Run(() => _service.AddProduct(Form.ToCreateDto()), token);
+                await Task.Run(() => _service.AddProduct(dto), token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = "添加成功！";
                 await List.LoadAsync(token);
@@ -298,7 +298,7 @@ namespace ProductManagerApp.ViewModels
                     return;
                 }
 
-                if (!Form.ValidateForSubmit())
+                if (!Form.TryUpdateDto(List.SelectedProduct, out var dto) || dto == null)
                 {
                     return;
                 }
@@ -306,7 +306,7 @@ namespace ProductManagerApp.ViewModels
                 operationCts = BeginOperation();
                 token = operationCts.Token;
 
-                await Task.Run(() => _service.UpdateProduct(Form.ToUpdateDto(List.SelectedProduct)), token);
+                await Task.Run(() => _service.UpdateProduct(dto), token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = "更新成功！";
                 await List.LoadAsync(token);

@@ -32,7 +32,10 @@ public class ProductValidatorTests
         var product = CreateValidProduct();
         product.Code = code;
 
-        Assert.Throws<ProductValidationException>(() => _validator.Validate(product));
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductValidationRules.CodeRequiredMessage, exception.Message);
     }
 
     [Theory]
@@ -58,7 +61,10 @@ public class ProductValidatorTests
         var product = CreateValidProduct();
         product.Name = name;
 
-        Assert.Throws<ProductValidationException>(() => _validator.Validate(product));
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductValidationRules.NameRequiredMessage, exception.Message);
     }
 
     [Theory]
@@ -69,7 +75,10 @@ public class ProductValidatorTests
         var product = CreateValidProduct();
         product.Price = price;
 
-        Assert.Throws<ProductValidationException>(() => _validator.Validate(product));
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductValidationRules.PricePositiveMessage, exception.Message);
     }
 
     [Fact]
@@ -78,7 +87,10 @@ public class ProductValidatorTests
         var product = CreateValidProduct();
         product.Stock = -1;
 
-        Assert.Throws<ProductValidationException>(() => _validator.Validate(product));
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductValidationRules.StockNonNegativeMessage, exception.Message);
     }
 
     [Fact]
@@ -87,7 +99,10 @@ public class ProductValidatorTests
         var product = CreateValidProduct();
         product.Description = "   ";
 
-        Assert.Throws<ProductValidationException>(() => _validator.Validate(product));
+        var exception = Assert.Throws<ProductValidationException>(
+            () => _validator.Validate(product));
+
+        Assert.Equal(ProductValidationRules.DescriptionRequiredMessage, exception.Message);
     }
 
     [Theory]
