@@ -75,6 +75,17 @@ namespace ProductManagerApp.ViewModels
             ValidateProperty(propertyName);
         }
 
+        public void ReportInputError(string propertyName, string message)
+        {
+            if (Array.IndexOf(ValidatedProperties, propertyName) < 0)
+            {
+                return;
+            }
+
+            _validatedProperties.Add(propertyName);
+            SetError(propertyName, message);
+        }
+
         public bool ValidateForSubmit()
         {
             foreach (var propertyName in ValidatedProperties)

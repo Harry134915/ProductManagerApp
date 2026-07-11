@@ -158,6 +158,8 @@
                         <TextBox x:Name="PriceBox"
                                  Tag="Price"
                                  Style="{StaticResource FormTextBoxStyle}"
+                                 PreviewTextInput="OnNumericPreviewTextInput"
+                                 DataObject.Pasting="OnNumericPaste"
                                  LostKeyboardFocus="OnFieldLostKeyboardFocus"
                                  Text="{Binding Price,
                                                 UpdateSourceTrigger=PropertyChanged,
@@ -194,6 +196,8 @@
                         <TextBox x:Name="StockBox"
                                  Tag="Stock"
                                  Style="{StaticResource FormTextBoxStyle}"
+                                 PreviewTextInput="OnNumericPreviewTextInput"
+                                 DataObject.Pasting="OnNumericPaste"
                                  LostKeyboardFocus="OnFieldLostKeyboardFocus"
                                  Text="{Binding Stock,
                                                 UpdateSourceTrigger=PropertyChanged,

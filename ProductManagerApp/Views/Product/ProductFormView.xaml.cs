@@ -1,3 +1,4 @@
+using ProductManagerApp.Infrastructure.Input;
 using ProductManagerApp.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +9,9 @@ namespace ProductManagerApp.Views
 {
     public partial class ProductFormView : UserControl
     {
+        private const string PriceInputError = "价格只能输入数字和一个小数点。";
+        private const string StockInputError = "库存只能输入非负整数。";
+
         public ProductFormView()
         {
             InitializeComponent();
@@ -38,6 +42,87 @@ namespace ProductManagerApp.Views
             {
                 viewModel.ValidateField(propertyName);
             }
+        }
+
+        private void OnNumericPreviewTextInput(
+            object sender,
+            TextCompositionEventArgs e)
+        {
+            if (sender is not TextBox textBox)
+            {
+                return;
+            }
+
+            var candidate = NumericInputRules.ApplyInput(
+                textBox.Text,
+                textBox.SelectionStart,
+                textBox.SelectionLength,
+                e.Text);
+
+            if (IsValidNumericCandidate(textBox, candidate))
+            {
+                return;
+            }
+
+            e.Handled = true;
+            ReportNumericInputError(textBox);
+        }
+
+        private void OnNumericPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            if (sender is not TextBox textBox ||
+                !e.SourceDataObject.GetDataPresent(DataFormats.UnicodeText, true))
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            var pastedText = e.SourceDataObject.GetData(DataFormats.UnicodeText) as string;
+            if (pastedText == null)
+            {
+                e.CancelCommand();
+                return;
+            }
+
+            var candidate = NumericInputRules.ApplyInput(
+                textBox.Text,
+                textBox.SelectionStart,
+                textBox.SelectionLength,
+                pastedText);
+
+            if (IsValidNumericCandidate(textBox, candidate))
+            {
+                return;
+            }
+
+            e.CancelCommand();
+            ReportNumericInputError(textBox);
+        }
+
+        private static bool IsValidNumericCandidate(TextBox textBox, string candidate)
+        {
+            return textBox.Tag switch
+            {
+                nameof(ProductFormViewModel.Price) =>
+                    NumericInputRules.IsValidPriceCandidate(candidate),
+                nameof(ProductFormViewModel.Stock) =>
+                    NumericInputRules.IsValidStockCandidate(candidate),
+                _ => true
+            };
+        }
+
+        private void ReportNumericInputError(TextBox textBox)
+        {
+            if (DataContext is not ProductFormViewModel viewModel ||
+                textBox.Tag is not string propertyName)
+            {
+                return;
+            }
+
+            var message = propertyName == nameof(ProductFormViewModel.Price)
+                ? PriceInputError
+                : StockInputError;
+            viewModel.ReportInputError(propertyName, message);
         }
 
         private void OnFocusRequested(string propertyName)

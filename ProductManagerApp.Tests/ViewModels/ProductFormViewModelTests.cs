@@ -119,6 +119,42 @@ public class ProductFormViewModelTests
     }
 
     [Fact]
+    public void ReportInputError_WhenPriceIsCorrected_ClearsInputError()
+    {
+        var viewModel = CreateValidForm();
+        viewModel.ReportInputError(
+            nameof(ProductFormViewModel.Price),
+            "价格只能输入数字和一个小数点。");
+
+        Assert.Equal(
+            "价格只能输入数字和一个小数点。",
+            GetError(viewModel, nameof(ProductFormViewModel.Price)));
+
+        viewModel.Price = "88.50";
+
+        Assert.Null(GetError(viewModel, nameof(ProductFormViewModel.Price)));
+        Assert.False(viewModel.HasErrors);
+    }
+
+    [Fact]
+    public void ReportInputError_WhenStockIsCorrected_ClearsInputError()
+    {
+        var viewModel = CreateValidForm();
+        viewModel.ReportInputError(
+            nameof(ProductFormViewModel.Stock),
+            "库存只能输入非负整数。");
+
+        Assert.Equal(
+            "库存只能输入非负整数。",
+            GetError(viewModel, nameof(ProductFormViewModel.Stock)));
+
+        viewModel.Stock = "20";
+
+        Assert.Null(GetError(viewModel, nameof(ProductFormViewModel.Stock)));
+        Assert.False(viewModel.HasErrors);
+    }
+
+    [Fact]
     public void Clear_RemovesValuesAndValidationErrors()
     {
         var viewModel = new ProductFormViewModel();
