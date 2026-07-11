@@ -22,6 +22,31 @@ namespace ProductManagerApp.ViewModels
         public ProductFormViewModel Form { get; }
         public DeleteConfirmViewModel DeleteConfirm { get; }
 
+        public bool IsEditMode => List.SelectedProduct != null;
+
+        public string FormTitle
+        {
+            get
+            {
+                if (!IsEditMode)
+                {
+                    return "新增商品";
+                }
+
+                var productName = string.IsNullOrWhiteSpace(List.SelectedProduct?.Name)
+                    ? List.SelectedProduct?.Code
+                    : List.SelectedProduct.Name;
+
+                return $"编辑商品：{productName}";
+            }
+        }
+
+        public string FormModeHint => IsEditMode
+            ? "正在编辑已选商品，商品编码不可修改"
+            : "填写完整商品信息后即可添加";
+
+        public string ClearFormButtonText => IsEditMode ? "退出编辑" : "清空表单";
+
         private string? _statusMessage;
         public string? StatusMessage
         {
@@ -80,6 +105,7 @@ namespace ProductManagerApp.ViewModels
             List.SelectedProductChanged += product =>
             {
                 Form.FillFrom(product);
+                NotifyFormModeChanged();
                 UpdateAllCommands();
             };
 
@@ -213,7 +239,7 @@ namespace ProductManagerApp.ViewModels
                 StatusMessage = "添加成功！";
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
-                Form.Clear();
+                ResetFormToCreateMode();
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -259,7 +285,7 @@ namespace ProductManagerApp.ViewModels
                 StatusMessage = "更新成功！";
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
-                Form.Clear();
+                ResetFormToCreateMode();
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -308,7 +334,7 @@ namespace ProductManagerApp.ViewModels
                 StatusMessage = $"已删除商品：{target.Name}";
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
-                Form.Clear();
+                ResetFormToCreateMode();
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -342,9 +368,14 @@ namespace ProductManagerApp.ViewModels
         {
             ErrorMessage = string.Empty;
             DeleteConfirm.Hide();
+            ResetFormToCreateMode();
+            UpdateAllCommands();
+        }
+
+        private void ResetFormToCreateMode()
+        {
             List.SelectedProduct = null;
             Form.Clear();
-            UpdateAllCommands();
         }
 
         private async Task LoadInitialProducts()
@@ -386,6 +417,14 @@ namespace ProductManagerApp.ViewModels
             CancelDeleteCommand?.RaiseCanExecuteChanged();
             RefreshCommand?.RaiseCanExecuteChanged();
             ClearFormCommand?.RaiseCanExecuteChanged();
+        }
+
+        private void NotifyFormModeChanged()
+        {
+            OnPropertyChanged(nameof(IsEditMode));
+            OnPropertyChanged(nameof(FormTitle));
+            OnPropertyChanged(nameof(FormModeHint));
+            OnPropertyChanged(nameof(ClearFormButtonText));
         }
 
         private void StartStatusClearTimer()

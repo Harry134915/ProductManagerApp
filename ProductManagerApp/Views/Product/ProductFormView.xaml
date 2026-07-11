@@ -18,9 +18,13 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="商品信息" FontSize="15" FontWeight="SemiBold"
+                <TextBlock Text="{Binding DataContext.FormTitle,
+                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                           FontSize="15" FontWeight="SemiBold"
                            Foreground="#303133"/>
-                <TextBlock Grid.Column="1" Text="选中商品后，商品编码不可修改"
+                <TextBlock Grid.Column="1"
+                           Text="{Binding DataContext.FormModeHint,
+                                          RelativeSource={RelativeSource AncestorType=Window}}"
                            Foreground="#B1B7C0" FontSize="11"
                            VerticalAlignment="Center"/>
             </Grid>
@@ -160,7 +164,9 @@
                         Command="{Binding DataContext.DeleteCommand,
                                   RelativeSource={RelativeSource AncestorType=Window}}"/>
 
-                    <Button Content="清空表单" Width="92" Margin="0,0,8,0"
+                    <Button Content="{Binding DataContext.ClearFormButtonText,
+                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                        Width="92" Margin="0,0,8,0"
                         Style="{StaticResource DefaultButton}"
                         Command="{Binding DataContext.ClearFormCommand,
                                   RelativeSource={RelativeSource AncestorType=Window}}"/>
