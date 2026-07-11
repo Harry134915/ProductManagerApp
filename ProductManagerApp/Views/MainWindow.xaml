@@ -14,6 +14,7 @@
 
         <Style x:Key="ToastBorderStyle" TargetType="Border">
             <Setter Property="Opacity" Value="0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="RenderTransform">
                 <Setter.Value>
                     <TranslateTransform Y="-6"/>
@@ -55,7 +56,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -75,30 +75,55 @@
 
         <views:ProductFormView    Grid.Row="1" DataContext="{Binding Form}" />
         <views:DeleteConfirmView  Grid.Row="2" DataContext="{Binding DeleteConfirm}" />
+        <views:ProductListView    Grid.Row="3" DataContext="{Binding List}" />
 
-        <!-- 状态提示留在主窗口，因为是全局的 -->
-        <StackPanel Grid.Row="3" Margin="0,0,0,2">
-            <Border Background="#FEF0F0" BorderBrush="#FBC4C4" BorderThickness="1"
-                    CornerRadius="4" Padding="12,8" Margin="0,0,0,6"
-                    Style="{StaticResource ToastBorderStyle}"
-                    Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="错误：" Foreground="#F56C6C" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#F56C6C" FontSize="13"/>
-                </StackPanel>
-            </Border>
+        <!-- Canvas 的期望尺寸为零，Toast 不参与主内容的高度计算。 -->
+        <Canvas Grid.Row="0" Grid.RowSpan="4"
+                Panel.ZIndex="20"
+                IsHitTestVisible="False">
+            <StackPanel Canvas.Top="0" Canvas.Right="0" Width="380">
+                <Border Background="#FEF0F0" BorderBrush="#FBC4C4" BorderThickness="1"
+                        CornerRadius="4" Padding="12,8" Margin="0,0,0,8"
+                        MinHeight="38"
+                        Style="{StaticResource ToastBorderStyle}"
+                        AutomationProperties.LiveSetting="Assertive"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-            <Border Background="#F0F9EB" BorderBrush="#B3E19D" BorderThickness="1"
-                    CornerRadius="4" Padding="12,8"
-                    Style="{StaticResource ToastBorderStyle}"
-                    Visibility="{Binding StatusMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="状态：" Foreground="#67C23A" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#67C23A" FontSize="13"/>
-                </StackPanel>
-            </Border>
-        </StackPanel>
+                        <TextBlock Text="错误：" Foreground="#C53030"
+                                   FontWeight="SemiBold" Margin="0,0,4,0"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
+                                   Foreground="#C53030" FontSize="13"
+                                   TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
 
-        <views:ProductListView    Grid.Row="4" DataContext="{Binding List}" />
+                <Border Background="#F0F9EB" BorderBrush="#B3E19D" BorderThickness="1"
+                        CornerRadius="4" Padding="12,8"
+                        MinHeight="38"
+                        Style="{StaticResource ToastBorderStyle}"
+                        AutomationProperties.LiveSetting="Polite"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringNotEmptyToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="状态：" Foreground="#2E7D32"
+                                   FontWeight="SemiBold" Margin="0,0,4,0"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding StatusMessage}"
+                                   Foreground="#2E7D32" FontSize="13"
+                                   TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Canvas>
     </Grid>
 </Window>
