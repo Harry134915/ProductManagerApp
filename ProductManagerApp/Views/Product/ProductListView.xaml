@@ -10,11 +10,59 @@
         <Style x:Key="CenterCellText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
         </Style>
 
         <Style x:Key="RightCellText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+        </Style>
+
+        <Style x:Key="DescriptionCellText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="ToolTip" Value="{Binding Description}"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="400"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+        </Style>
+
+        <Style x:Key="TableColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F5F7FA"/>
+            <Setter Property="Foreground" Value="#606266"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="BorderBrush" Value="#EBEEF5"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EBEEF5"/>
+                    <Setter Property="Foreground" Value="#303133"/>
+                </Trigger>
+                <Trigger Property="SortDirection" Value="Ascending">
+                    <Setter Property="Foreground" Value="#1F6FB2"/>
+                    <Setter Property="Background" Value="#ECF5FF"/>
+                </Trigger>
+                <Trigger Property="SortDirection" Value="Descending">
+                    <Setter Property="Foreground" Value="#1F6FB2"/>
+                    <Setter Property="Background" Value="#ECF5FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CenterColumnHeaderStyle"
+               TargetType="DataGridColumnHeader"
+               BasedOn="{StaticResource TableColumnHeaderStyle}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="RightColumnHeaderStyle"
+               TargetType="DataGridColumnHeader"
+               BasedOn="{StaticResource TableColumnHeaderStyle}">
+            <Setter Property="HorizontalContentAlignment" Value="Right"/>
         </Style>
     </UserControl.Resources>
 
@@ -97,34 +145,32 @@
                           Background="White"
                           AlternatingRowBackground="#FAFAFA"
                           SelectionUnit="FullRow"
+                          HeadersVisibility="Column"
+                          CanUserSortColumns="True"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False">
 
                     <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#F5F7FA"/>
-                            <Setter Property="Foreground" Value="#606266"/>
-                            <Setter Property="FontSize" Value="12"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="12,0"/>
-                            <Setter Property="BorderBrush" Value="#EBEEF5"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                        </Style>
+                        <StaticResource ResourceKey="TableColumnHeaderStyle"/>
                     </DataGrid.ColumnHeaderStyle>
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
                             <Setter Property="Padding" Value="12,0"/>
-                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="1"/>
                             <Setter Property="Foreground" Value="#606266"/>
                             <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="DataGridCell">
                                         <Border Padding="{TemplateBinding Padding}"
-                                                Background="{TemplateBinding Background}">
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}">
                                             <ContentPresenter VerticalAlignment="Center"/>
                                         </Border>
                                     </ControlTemplate>
@@ -134,7 +180,23 @@
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter Property="Background" Value="#ECF5FF"/>
-                                    <Setter Property="Foreground" Value="#409EFF"/>
+                                    <Setter Property="Foreground" Value="#1F6FB2"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter Property="Background" Value="#F4F9FF"/>
+                                    <Setter Property="BorderBrush" Value="#409EFF"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="True"/>
+                                        <Condition Property="IsKeyboardFocusWithin" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" Value="#DCEEFF"/>
+                                    <Setter Property="BorderBrush" Value="#409EFF"/>
+                                    <Setter Property="Foreground" Value="#174F80"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="#A8ABB2"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -142,27 +204,60 @@
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="3,0,0,0"/>
                             <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#ECF5FF"/>
-                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Background" Value="#F5F7FA"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter Property="Background" Value="#F4F9FF"/>
+                                    <Setter Property="BorderBrush" Value="#79BBFF"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#ECF5FF"/>
+                                    <Setter Property="BorderBrush" Value="#409EFF"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="True"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" Value="#E2F0FF"/>
+                                    <Setter Property="BorderBrush" Value="#409EFF"/>
+                                </MultiTrigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsSelected" Value="True"/>
+                                        <Condition Property="IsKeyboardFocusWithin" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" Value="#DCEEFF"/>
+                                    <Setter Property="BorderBrush" Value="#409EFF"/>
+                                </MultiTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
 
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="64"
+                                            SortMemberPath="Id" CanUserSort="True"
+                                            HeaderStyle="{StaticResource CenterColumnHeaderStyle}"
                                             ElementStyle="{StaticResource CenterCellText}"/>
-                        <DataGridTextColumn Header="商品编码" Binding="{Binding Code}" Width="130"/>
-                        <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="160"/>
-                        <DataGridTextColumn Header="价格" Binding="{Binding Price, StringFormat={}{0:F2}}" Width="100"
+                        <DataGridTextColumn Header="商品编码" Binding="{Binding Code}" Width="130"
+                                            SortMemberPath="Code" CanUserSort="True"/>
+                        <DataGridTextColumn Header="商品名称" Binding="{Binding Name}" Width="160"
+                                            SortMemberPath="Name" CanUserSort="True"/>
+                        <DataGridTextColumn Header="价格" Binding="{Binding Price, StringFormat={}{0:N2}}" Width="110"
+                                            SortMemberPath="Price" CanUserSort="True"
+                                            HeaderStyle="{StaticResource RightColumnHeaderStyle}"
                                             ElementStyle="{StaticResource RightCellText}"/>
-                        <DataGridTextColumn Header="库存" Binding="{Binding Stock}" Width="90"
-                                            ElementStyle="{StaticResource CenterCellText}"/>
-                        <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*"/>
+                        <DataGridTextColumn Header="库存" Binding="{Binding Stock, StringFormat={}{0:N0}}" Width="90"
+                                            SortMemberPath="Stock" CanUserSort="True"
+                                            HeaderStyle="{StaticResource RightColumnHeaderStyle}"
+                                            ElementStyle="{StaticResource RightCellText}"/>
+                        <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*"
+                                            CanUserSort="False"
+                                            ElementStyle="{StaticResource DescriptionCellText}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
