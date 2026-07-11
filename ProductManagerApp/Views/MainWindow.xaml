@@ -7,6 +7,7 @@
         MinHeight="560" MinWidth="840"
         Background="#F5F6FA"
         Icon="/Assets/Idol.jpg"
+        AutomationProperties.Name="商品管理系统主窗口"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
@@ -51,7 +52,12 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding EscapeCommand}"/>
+    </Window.InputBindings>
+
+    <Grid Margin="14" KeyboardNavigation.TabNavigation="Continue">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

@@ -4,11 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
+             AutomationProperties.Name="删除商品确认区域"
+             KeyboardNavigation.TabNavigation="Continue"
              d:DesignHeight="48">
 
     <Border x:Name="ConfirmBorder"
             Background="#FEF0F0" BorderBrush="#FBC4C4" BorderThickness="1"
             CornerRadius="6" Padding="14,12" Margin="0,0,0,8"
+            AutomationProperties.LiveSetting="Assertive"
             RenderTransformOrigin="0.5,0"
             Opacity="0">
 
@@ -80,6 +83,7 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button Width="96" Padding="12,0" Margin="0,0,8,0"
+                        TabIndex="0" AutomationProperties.Name="确认删除商品"
                         Command="{Binding DataContext.ConfirmDeleteCommand,
                                           RelativeSource={RelativeSource AncestorType=Window}}">
                     <Button.Style>
@@ -96,6 +100,7 @@
                     </Button.Style>
                 </Button>
                 <Button Content="取消" Width="64"
+                        TabIndex="1" AutomationProperties.Name="取消删除商品"
                         Style="{StaticResource DefaultButton}"
                         Command="{Binding DataContext.CancelDeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
             </StackPanel>

@@ -19,6 +19,7 @@ public class MainWindowViewModelTests
             Assert.Equal("新增商品", viewModel.FormTitle);
             Assert.Equal("填写完整商品信息后即可添加", viewModel.FormModeHint);
             Assert.Equal("清空表单", viewModel.ClearFormButtonText);
+            Assert.False(viewModel.EscapeCommand.CanExecute(null));
         }
         finally
         {
@@ -59,6 +60,8 @@ public class MainWindowViewModelTests
         try
         {
             viewModel.List.SelectedProduct = CreateProduct();
+            string? focusedProperty = null;
+            viewModel.Form.FocusRequested += propertyName => focusedProperty = propertyName;
 
             viewModel.ClearFormCommand.Execute(null);
 
@@ -71,6 +74,7 @@ public class MainWindowViewModelTests
             Assert.Equal(string.Empty, viewModel.Form.Price);
             Assert.Equal(string.Empty, viewModel.Form.Stock);
             Assert.Equal(string.Empty, viewModel.Form.Description);
+            Assert.Equal(nameof(ProductFormViewModel.Code), focusedProperty);
         }
         finally
         {
@@ -128,6 +132,71 @@ public class MainWindowViewModelTests
             Assert.Equal(0, repository.AddProductCallCount);
             Assert.True(string.IsNullOrEmpty(viewModel.ErrorMessage));
             Assert.False(viewModel.AddCommand.IsExecuting);
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task AddCommand_WithValidForm_ClearsFormAndFocusesCode()
+    {
+        var repository = new FakeProductRepository();
+        var viewModel = CreateViewModel(repository);
+
+        try
+        {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
+            viewModel.Form.Code = "P002";
+            viewModel.Form.Name = "Tablet";
+            viewModel.Form.Price = "2999.00";
+            viewModel.Form.Stock = "8";
+            viewModel.Form.Description = "Portable tablet";
+            string? focusedProperty = null;
+            viewModel.Form.FocusRequested += propertyName => focusedProperty = propertyName;
+
+            viewModel.AddCommand.Execute(null);
+            await WaitUntilAsync(() => !viewModel.AddCommand.IsExecuting);
+
+            Assert.Equal(1, repository.AddProductCallCount);
+            Assert.Equal(nameof(ProductFormViewModel.Code), focusedProperty);
+            Assert.Equal(string.Empty, viewModel.Form.Code);
+            Assert.False(viewModel.IsEditMode);
+        }
+        finally
+        {
+            viewModel.CancelOperations();
+        }
+    }
+
+    [Fact]
+    public async Task EscapeCommand_CancelsDeleteBeforeExitingEditMode()
+    {
+        var repository = new FakeProductRepository();
+        var viewModel = CreateViewModel(repository);
+
+        try
+        {
+            await WaitUntilAsync(() => viewModel.List.HasLoaded && !viewModel.List.IsRefreshing);
+            viewModel.List.SelectedProduct = CreateProduct();
+            viewModel.DeleteCommand.Execute(null);
+
+            Assert.True(viewModel.DeleteConfirm.IsVisible);
+            Assert.Equal(0, repository.DeleteProductCallCount);
+            Assert.True(viewModel.EscapeCommand.CanExecute(null));
+
+            viewModel.EscapeCommand.Execute(null);
+
+            Assert.False(viewModel.DeleteConfirm.IsVisible);
+            Assert.True(viewModel.IsEditMode);
+
+            viewModel.EscapeCommand.Execute(null);
+
+            Assert.False(viewModel.IsEditMode);
+            Assert.Null(viewModel.List.SelectedProduct);
+            Assert.False(viewModel.EscapeCommand.CanExecute(null));
+            Assert.Equal(0, repository.DeleteProductCallCount);
         }
         finally
         {

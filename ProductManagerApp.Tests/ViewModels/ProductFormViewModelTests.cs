@@ -40,6 +40,30 @@ public class ProductFormViewModelTests
     }
 
     [Fact]
+    public void RequestFocus_WithKnownField_RaisesFocusRequested()
+    {
+        var viewModel = new ProductFormViewModel();
+        string? focusedProperty = null;
+        viewModel.FocusRequested += propertyName => focusedProperty = propertyName;
+
+        viewModel.RequestFocus(nameof(ProductFormViewModel.Price));
+
+        Assert.Equal(nameof(ProductFormViewModel.Price), focusedProperty);
+    }
+
+    [Fact]
+    public void RequestFocus_WithUnknownField_DoesNotRaiseFocusRequested()
+    {
+        var viewModel = new ProductFormViewModel();
+        var requestCount = 0;
+        viewModel.FocusRequested += _ => requestCount++;
+
+        viewModel.RequestFocus("UnknownField");
+
+        Assert.Equal(0, requestCount);
+    }
+
+    [Fact]
     public void ValidateForSubmit_WithWhitespaceTextFields_ShowsRequiredErrors()
     {
         var viewModel = CreateValidForm();

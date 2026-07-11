@@ -91,6 +91,7 @@ namespace ProductManagerApp.ViewModels
         public RelayCommand CancelDeleteCommand { get; }
         public AsyncRelayCommand RefreshCommand { get; }
         public RelayCommand ClearFormCommand { get; }
+        public RelayCommand EscapeCommand { get; }
         public MainWindowViewModel(IProductService service)
         {
             _service = service;
@@ -152,6 +153,16 @@ namespace ProductManagerApp.ViewModels
                 _ => ClearForm(),
                 _ => List.SelectedProduct != null || Form.HasInput()
             );
+
+            EscapeCommand = new RelayCommand(
+                _ => HandleEscape(),
+                _ => CanHandleEscape()
+            );
+
+            AddCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
+            UpdateCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
+            ConfirmDeleteCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
+            RefreshCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
 
             //异步加载数据，避免界面卡顿
             _ = LoadInitialProducts();
@@ -249,6 +260,7 @@ namespace ProductManagerApp.ViewModels
                 await List.LoadAsync(token);
                 token.ThrowIfCancellationRequested();
                 ResetFormToCreateMode();
+                Form.RequestFocus(nameof(ProductFormViewModel.Code));
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -383,7 +395,49 @@ namespace ProductManagerApp.ViewModels
             ErrorMessage = string.Empty;
             DeleteConfirm.Hide();
             ResetFormToCreateMode();
+            Form.RequestFocus(nameof(ProductFormViewModel.Code));
             UpdateAllCommands();
+        }
+
+        private bool CanHandleEscape()
+        {
+            if (ConfirmDeleteCommand.IsExecuting)
+            {
+                return false;
+            }
+
+            if (DeleteConfirm.IsVisible)
+            {
+                return true;
+            }
+
+            return IsEditMode &&
+                !UpdateCommand.IsExecuting &&
+                !RefreshCommand.IsExecuting;
+        }
+
+        private void HandleEscape()
+        {
+            if (DeleteConfirm.IsVisible)
+            {
+                CancelDelete();
+                return;
+            }
+
+            if (IsEditMode)
+            {
+                ClearForm();
+            }
+        }
+
+        private void OnAsyncCommandPropertyChanged(
+            object? sender,
+            PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AsyncRelayCommand.IsExecuting))
+            {
+                UpdateAllCommands();
+            }
         }
 
         private void ResetFormToCreateMode()
@@ -431,6 +485,7 @@ namespace ProductManagerApp.ViewModels
             CancelDeleteCommand?.RaiseCanExecuteChanged();
             RefreshCommand?.RaiseCanExecuteChanged();
             ClearFormCommand?.RaiseCanExecuteChanged();
+            EscapeCommand?.RaiseCanExecuteChanged();
         }
 
         private void NotifyFormModeChanged()

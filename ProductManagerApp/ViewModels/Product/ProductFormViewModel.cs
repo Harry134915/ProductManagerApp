@@ -102,8 +102,18 @@ namespace ProductManagerApp.ViewModels
                 return true;
             }
 
-            FocusRequested?.Invoke(firstInvalidProperty);
+            RequestFocus(firstInvalidProperty);
             return false;
+        }
+
+        public void RequestFocus(string propertyName)
+        {
+            if (Array.IndexOf(ValidatedProperties, propertyName) < 0)
+            {
+                return;
+            }
+
+            FocusRequested?.Invoke(propertyName);
         }
 
         public IEnumerable GetErrors(string? propertyName)
