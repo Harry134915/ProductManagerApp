@@ -1,34 +1,37 @@
 # ProductManagerApp
 
-一个基于 **.NET 8 + WPF + MVVM + SQLite** 的商品管理桌面应用，用于演示商品信息的新增、查询、更新、删除、刷新以及基础业务校验流程。
+一个基于 **.NET 8、WPF、MVVM、Dapper 和 SQLite** 的商品管理桌面应用。项目支持商品新增、更新、删除、刷新、搜索和排序，并包含数据库自动初始化、字段级校验、异步操作状态、用户友好的异常提示及应用日志。
 
-项目采用分层结构组织代码，界面层负责交互展示，业务层负责校验和数据转换，数据访问层负责 SQLite 持久化操作。应用启动时会自动初始化数据库表，首次运行不需要手动准备数据库文件。
+项目使用轻量分层结构：View 负责展示和输入，ViewModel 负责界面状态与操作编排，BLL 负责业务规则和映射，DAL 负责 SQLite 持久化。首次运行时会自动创建数据库结构，不需要手动准备 `database.db`。
 
 ## 技术栈
 
 | 类型 | 技术 |
 | --- | --- |
-| 运行平台 | .NET 8 |
+| 运行平台 | .NET 8 / Windows |
 | UI 框架 | WPF |
-| 架构模式 | MVVM |
+| 架构模式 | MVVM + 分层架构 |
 | 数据库 | SQLite |
-| 数据访问 | Dapper |
+| 数据访问 | Dapper + System.Data.SQLite |
 | 依赖注入 | Microsoft.Extensions.DependencyInjection |
-| 项目类型 | Windows 桌面应用 |
+| 测试框架 | xUnit |
 
 ## 功能特性
 
-- 商品列表展示
-- 新增商品
-- 更新商品
-- 删除商品确认
-- 刷新商品列表
-- 表单输入校验
-- 商品编码不可修改
-- 数据库自动初始化
-- 数据库访问异常提示
-- 成功/错误状态提示动画
-- 清空表单并回到新增模式
+- 商品新增、更新、删除和刷新
+- 按商品编码或名称实时搜索
+- 商品表格按 ID、编码、名称、价格和库存排序
+- 新增与编辑模式清晰切换，编辑时商品编码只读
+- 商品编码仅允许英文字母、数字、连字符和下划线
+- 商品编码忽略大小写保持唯一，阻止重复新增
+- 价格与库存输入限制和字段级错误提示
+- 自动聚焦首个无效字段
+- 加载、空列表、搜索无结果和加载失败状态
+- 异步命令执行期间自动禁用对应操作，防止重复点击
+- 非阻塞 Toast 状态提示和删除二次确认
+- `F5` 刷新、`Esc` 退出编辑或取消删除、`Delete` 请求删除
+- 启动时自动创建数据库表、触发器和唯一索引
+- 业务异常、数据库异常和取消操作分级记录日志
 
 ## 项目结构
 
@@ -41,14 +44,13 @@ ProductManagerApp
 │  └─ ScreenShot_*.png
 ├─ ProductManagerApp.Tests
 │  ├─ BLL
-│  │  ├─ Mappers
-│  │  ├─ Services
-│  │  └─ Validators
+│  ├─ DAL
+│  ├─ Infrastructure
+│  ├─ ViewModels
 │  └─ Fakes
 └─ ProductManagerApp
    ├─ App.xaml
    ├─ App.xaml.cs
-   ├─ ProductManagerApp.csproj
    ├─ Assets
    ├─ BLL
    │  ├─ Interfaces
@@ -63,99 +65,55 @@ ProductManagerApp
    ├─ Entity
    ├─ Infrastructure
    │  ├─ Commands
-   │  └─ Exceptions
+   │  ├─ Exceptions
+   │  ├─ Input
+   │  └─ Logging
    ├─ ViewModels
+   │  └─ Product
    └─ Views
+      ├─ Converters
+      └─ Product
 ```
 
 ## 架构说明
 
-项目整体采用 **MVVM + 分层架构**：
-
-```text
-Views
-  ↓ 绑定
-ViewModels
-  ↓ 调用
-BLL Services
-  ↓ 校验 / 映射
-DAL Repositories
-  ↓ 执行 SQL
-SQLite
+```mermaid
+graph LR
+    A["Views / XAML"] -->|Binding / Command| B["ViewModels"]
+    B -->|IProductService| C["BLL Services"]
+    C -->|Validation / Mapping| D["Validators / Mappers"]
+    C -->|IProductRepository| E["DAL Repositories"]
+    E -->|IDbProvider| F[(SQLite)]
+    G["App.xaml.cs - 组合根"] -.-> B
+    G -.-> C
+    G -.-> E
 ```
 
-### Views
+依赖方向保持从界面到业务再到数据访问：
 
-负责 WPF 界面展示和用户交互。
+- **Views**：展示数据、转发键盘及输入事件，不直接访问 Service 或数据库。
+- **ViewModels**：维护表单、列表、选择、加载和确认状态，编排异步命令并处理用户提示。
+- **BLL**：执行商品业务校验、DTO/Entity 映射、唯一性检查及 affected rows 判断。
+- **DAL**：管理连接、初始化数据库并执行参数化 SQL；将 SQLite/Dapper 异常包装为 `DataAccessException`。
+- **Infrastructure**：提供命令、输入规则、跨层异常和日志等通用能力。
+- **App.xaml.cs**：作为组合根注册依赖、初始化数据库并创建主窗口。
 
-主要包含：
-
-- `MainWindow.xaml`
-- `ProductFormView.xaml`
-- `ProductListView.xaml`
-- `DeleteConfirmView.xaml`
-
-界面通过 Binding 绑定 ViewModel 属性和命令，不直接访问数据库。
-
-### ViewModels
-
-负责界面状态、命令和交互流程。
-
-主要包含：
-
-- `MainWindowViewModel`
-- `ProductFormViewModel`
-- `ProductListViewModel`
-- `DeleteConfirmViewModel`
-
-例如新增商品、更新商品、删除确认、刷新列表、清空表单等操作都由 ViewModel 统一协调。
-
-### BLL
-
-业务逻辑层，负责业务规则、校验、DTO 和 Entity 转换。
-
-主要职责：
-
-- 商品基础校验
-- 商品编码不可修改校验
-- DTO 和 Entity 映射
-- 调用 Repository 完成数据持久化
-- 抛出业务异常或数据访问异常
-
-### DAL
-
-数据访问层，负责数据库连接、表初始化和 SQL 执行。
-
-主要包含：
-
-- `SqliteProvider`
-- `SqliteDatabaseInitializer`
-- `ProductRepository`
-
-应用启动时会自动执行建表逻辑，确保 `products` 表存在。
+更详细的状态变化、CRUD 时序和异常边界见 [ProgramFlow/设计文档.md](ProgramFlow/设计文档.md)。
 
 ## 数据库说明
 
-数据库文件名：
-
-```text
-database.db
-```
-
-数据库位置：
+数据库文件名为 `database.db`，位置固定在应用程序基目录：
 
 ```text
 AppContext.BaseDirectory/database.db
 ```
 
-也就是应用运行输出目录下的 `database.db`。
-
-启动时会自动创建表：
+启动时 `IDatabaseInitializer` 会在事务中确保 `products` 表、编码唯一性触发器和忽略大小写的唯一索引存在。
 
 ```sql
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    code TEXT NOT NULL UNIQUE,
+    code TEXT NOT NULL COLLATE NOCASE UNIQUE,
     name TEXT NOT NULL,
     price NUMERIC NOT NULL,
     stock INTEGER NOT NULL,
@@ -163,42 +121,87 @@ CREATE TABLE IF NOT EXISTS products (
 );
 ```
 
+编码唯一性规则：
+
+- 查询和唯一约束均忽略大小写，`P001` 与 `p001` 被视为同一编码。
+- 新数据库会创建唯一索引 `ux_products_code_nocase`。
+- 如果旧数据库已经存在重复编码，初始化不会删除历史数据；触发器会先阻止继续新增重复编码。清理旧重复数据后，下次启动会补建唯一索引。
+
+## 业务规则
+
+- 商品 ID 必须大于 `0`。
+- 商品编码不能为空，只能包含 `A-Z`、`a-z`、`0-9`、`-` 和 `_`。
+- 商品编码忽略大小写唯一，新增后不可修改。
+- 商品名称不能为空或只包含空格。
+- 商品价格必须是有效数字且大于 `0`。
+- 商品库存必须是整数且不能小于 `0`。
+- 商品描述不能为空或只包含空格。
+- 新增、更新和删除必须至少影响一行，否则返回明确业务错误。
+
+界面层负责输入格式和字段级提示，`ProductValidator` 负责最终业务规则。Service 始终执行最终校验，避免绕过界面直接调用业务层时写入非法数据。
+
 ## 核心流程
 
 ### 应用启动
 
-1. WPF 应用启动。
-2. `App.xaml.cs` 创建依赖注入容器。
-3. 注册数据库、Repository、Service、Validator、ViewModel 和 View。
-4. 执行 `IDatabaseInitializer.Initialize()` 初始化数据库表。
-5. 创建并显示 `MainWindow`。
+1. `App.xaml.cs` 创建依赖注入容器并注册 Provider、Initializer、Repository、Service、Validator、Logger、ViewModel 和 View。
+2. 使用 `AppContext.BaseDirectory` 构造 SQLite 绝对路径。
+3. 执行 `IDatabaseInitializer.Initialize()` 创建或修复必要数据库对象。
+4. 创建 `MainWindow`，ViewModel 开始异步加载商品列表。
 
 ### 新增商品
 
-1. 用户填写商品信息。
-2. ViewModel 组装 `ProductCreateDto`。
-3. Service 将 DTO 映射为 Entity。
-4. Validator 校验商品编码、名称、价格、库存等规则。
-5. Repository 执行 INSERT SQL。
-6. 刷新商品列表并清空表单。
+1. `ProductFormViewModel` 校验输入并创建 `ProductCreateDto`。
+2. `ProductService` 映射 Entity、执行业务校验并检查编码是否已存在。
+3. `ProductRepository` 执行参数化 `INSERT` 并返回 affected rows。
+4. 操作成功后重新加载列表、清空表单、聚焦商品编码并显示 Toast。
 
 ### 更新商品
 
-1. 用户在商品列表中选择一行。
-2. 表单自动填充该商品信息。
-3. 商品编码进入只读状态。
-4. 用户修改名称、价格、库存或描述。
-5. Service 校验商品存在且编码未被修改。
-6. Repository 执行 UPDATE SQL。
-7. 刷新列表并清空表单。
+1. 选择列表行后进入编辑模式并填充表单，商品编码变为只读。
+2. `ProductUpdateDto` 保留被选商品的 ID 和编码。
+3. Service 检查商品存在、编码未改变以及其他字段合法。
+4. Repository 仅更新名称、价格、库存和描述，不更新编码。
+5. 操作成功后刷新列表并退出编辑模式。
 
 ### 删除商品
 
-1. 用户选择商品。
-2. 点击删除按钮。
-3. 显示删除确认条。
-4. 用户确认后执行删除。
-5. 刷新列表并清空表单。
+1. 选择商品并请求删除，界面显示非阻塞确认条。
+2. 用户确认后 Service 校验 ID，Repository 执行 `DELETE`。
+3. 操作成功后刷新列表、退出编辑模式并显示结果提示。
+
+### 搜索与刷新
+
+- 搜索在已加载数据中按编码和名称进行不区分大小写的匹配。
+- 搜索不会修改原始 `Products` 集合，清空搜索即可恢复全部结果。
+- 刷新会按商品 ID 尝试恢复当前选择；若商品已不存在或被搜索条件过滤，则退出编辑模式。
+
+## 异步与取消
+
+- 新增、更新、确认删除和刷新使用 `AsyncRelayCommand`。
+- 命令通过 `IsExecuting` 在执行期间自动禁用自身，防止重复提交。
+- `MainWindowViewModel` 同一时间维护一个 `CancellationTokenSource`；新操作开始或窗口关闭时会取消并释放旧操作。
+- `ProductListViewModel` 使用加载版本号阻止过期结果覆盖新结果。
+- 当前 Service 和 Repository 仍是同步 API，由 ViewModel 使用 `Task.Run` 避免阻塞 UI；取消后会阻止过期结果继续更新界面。
+
+## 异常与日志
+
+主要异常边界：
+
+- `ProductValidationException`：业务规则或 affected rows 不符合预期。
+- `DataAccessException`：SQLite 连接、查询或写入失败。
+- `OperationCanceledException`：用户关闭窗口或新操作取消旧操作，静默处理。
+- 其他异常：记录后向用户显示通用提示。
+
+`IAppLogger` 将日志能力与 ViewModel 解耦，默认 `DebugAppLogger` 输出 `INFO`、`WARN` 和 `ERROR`。日志只记录商品 ID、编码和列表数量，不记录价格、库存或描述。
+
+查看日志：
+
+1. 在 Visual Studio 中使用 `F5` 调试启动。
+2. 打开“视图”→“输出”。
+3. 将“显示输出来源”切换为“调试”。
+
+当前实现不会写入日志文件，直接运行发布版程序时无法查看历史日志。
 
 ## 运行方式
 
@@ -206,88 +209,60 @@ CREATE TABLE IF NOT EXISTS products (
 
 - Windows
 - .NET 8 SDK
-- Visual Studio 2022 或支持 .NET 8 的 IDE
+- Visual Studio 2022 或其他支持 .NET 8 WPF 的 IDE
 
-### 使用命令行构建
+### 构建
 
 ```powershell
 dotnet build ProductManagerApp.sln
 ```
 
-### 使用命令行运行
+### 运行
 
 ```powershell
 dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 ```
 
-### 使用 Visual Studio 运行
+### Visual Studio
 
-1. 打开 `ProductManagerApp.sln`
-2. 将 `ProductManagerApp` 设置为启动项目
-3. 点击运行
+1. 打开 `ProductManagerApp.sln`。
+2. 将 `ProductManagerApp` 设置为启动项目。
+3. 使用 `F5` 调试运行。
 
 ## 测试说明
 
-项目包含独立测试项目：
+测试项目使用 xUnit，不启动 WPF 窗口，也不访问应用输出目录中的生产数据库。
 
-```text
-ProductManagerApp.Tests
-```
+测试覆盖：
 
-测试框架使用 `xUnit`，测试项目引用主项目，但不连接真实 SQLite，也不启动 WPF 窗口。
+- `ProductValidator`、`ProductValidationRules` 和商品编码规则
+- `ProductMapper` 的 DTO/Entity 双向映射
+- `ProductService` 的查询、新增、更新、删除、重复编码和 affected rows 场景
+- `AsyncRelayCommand` 的执行状态和防重复执行
+- 价格、库存输入及粘贴规则
+- `ProductFormViewModel` 的字段校验、DTO 创建和焦点请求
+- `ProductListViewModel` 的加载、取消、错误、空状态、搜索和选择恢复
+- `MainWindowViewModel` 的模式切换、命令、删除确认、异常提示和日志
+- `SqliteDatabaseInitializer` 对旧数据库重复编码的兼容处理
 
-当前测试覆盖：
+大部分测试使用手写 Fake 或 Stub，不依赖真实数据库。数据库初始化测试会创建临时 SQLite 文件，完成验证后自动清理。
 
-- `ProductValidator`
-  - 商品编码、名称、价格、库存、描述校验
-  - 商品 ID 校验
-  - 商品编码不可修改校验
-- `ProductMapper`
-  - `ProductCreateDto -> Product`
-  - `ProductUpdateDto -> Product`
-  - `Product -> ProductQueryDto`
-- `ProductService`
-  - 查询结果映射
-  - 新增商品
-  - 更新商品
-  - 更新价格
-  - 删除商品
-  - 商品不存在、编码被修改、非法参数等异常场景
-
-测试中使用手写 `FakeProductRepository` 替代真实数据库仓储，避免单元测试依赖本地数据库文件。
-
-运行测试：
+运行全部测试：
 
 ```powershell
 dotnet test ProductManagerApp.sln
 ```
 
-当前测试规模：
+当前基线：
 
 ```text
-26 个测试
+104 个测试通过，0 个失败
 ```
 
 ## 当前设计约定
 
-- 商品编码用于唯一标识商品，新增后不可修改。
-- 商品价格必须大于 0。
-- 商品库存不能为负数。
-- 商品描述允许为空字符串，但不能只包含空白字符。
-- 选中商品列表行后进入编辑模式。
-- 点击“清空表单”后回到新增模式。
-- 添加、更新、刷新和删除成功使用非阻塞状态提示。
-- 删除操作需要用户二次确认。
-
-## 异常处理
-
-项目中主要有两类异常：
-
-- `ProductValidationException`：业务校验异常，例如价格非法、库存非法、编码不可修改。
-- `DataAccessException`：数据库访问异常，例如 SQLite 访问失败或 SQL 执行失败。
-
-ViewModel 会捕获这些异常，并显示适合用户理解的提示文案。
-
-## 说明
-
-`Assets/Idol.jpg` 是项目当前窗口图标资源，属于个人设定，保留不做替换。
+- 选中商品后进入编辑模式；清空表单或按 `Esc` 返回新增模式。
+- 新增和编辑共用一套表单，但只有编辑模式允许更新和删除。
+- 删除操作必须二次确认。
+- 成功状态使用约两秒后自动消失的非阻塞 Toast。
+- `Assets/Idol.jpg` 是个人设定的窗口图标资源，明确保留。
