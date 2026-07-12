@@ -31,7 +31,7 @@
 - 非阻塞 Toast 状态提示和删除二次确认
 - `F5` 刷新、`Esc` 退出编辑或取消删除、`Delete` 请求删除
 - 启动时自动创建数据库表、触发器和唯一索引
-- 业务异常、数据库异常和取消操作分级记录日志
+- 业务异常、数据库异常和取消操作分级记录到调试输出与按日文件
 
 ## 项目结构
 
@@ -193,15 +193,27 @@ CREATE TABLE IF NOT EXISTS products (
 - `OperationCanceledException`：用户关闭窗口或新操作取消旧操作，静默处理。
 - 其他异常：记录后向用户显示通用提示。
 
-`IAppLogger` 将日志能力与 ViewModel 解耦，默认 `DebugAppLogger` 输出 `INFO`、`WARN` 和 `ERROR`。日志只记录商品 ID、编码和列表数量，不记录价格、库存或描述。
+`IAppLogger` 将日志能力与 ViewModel 解耦。默认使用 `CompositeAppLogger` 同时写入 `DebugAppLogger` 和 `FileAppLogger`，日志级别包括 `INFO`、`WARN` 和 `ERROR`。日志只记录商品 ID、编码和列表数量，不记录价格、库存或描述。
 
-查看日志：
+文件日志位置：
+
+```text
+%LOCALAPPDATA%\ProductManagerApp\Logs\ProductManagerApp-yyyy-MM-dd.log
+```
+
+例如：
+
+```text
+C:\Users\<用户名>\AppData\Local\ProductManagerApp\Logs\ProductManagerApp-2026-07-12.log
+```
+
+文件使用 UTF-8 编码并按日期分文件。直接运行 Debug 或 Release 程序都可以查看文件日志；日志目录或文件暂时不可写时，记录失败会降级到调试输出，不会中断商品操作。
+
+查看 Visual Studio 调试输出：
 
 1. 在 Visual Studio 中使用 `F5` 调试启动。
 2. 打开“视图”→“输出”。
 3. 将“显示输出来源”切换为“调试”。
-
-当前实现不会写入日志文件，直接运行发布版程序时无法查看历史日志。
 
 ## 运行方式
 
@@ -243,6 +255,8 @@ dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 - `ProductFormViewModel` 的字段校验、DTO 创建和焦点请求
 - `ProductListViewModel` 的加载、取消、错误、空状态、搜索和选择恢复
 - `MainWindowViewModel` 的模式切换、命令、删除确认、异常提示和日志
+- `FileAppLogger` 的日志格式、UTF-8 文件、并发写入和失败降级
+- `CompositeAppLogger` 的多目标转发和故障隔离
 - `SqliteDatabaseInitializer` 对旧数据库重复编码的兼容处理
 
 大部分测试使用手写 Fake 或 Stub，不依赖真实数据库。数据库初始化测试会创建临时 SQLite 文件，完成验证后自动清理。
@@ -256,7 +270,7 @@ dotnet test ProductManagerApp.sln
 当前基线：
 
 ```text
-104 个测试通过，0 个失败
+108 个测试通过，0 个失败
 ```
 
 ## 当前设计约定

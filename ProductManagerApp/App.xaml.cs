@@ -28,10 +28,31 @@ namespace ProductManagerApp
             var services = serviceCollection.BuildServiceProvider();
             Services = services;
 
-            services.GetRequiredService<IDatabaseInitializer>().Initialize();
+            var logger = services.GetRequiredService<IAppLogger>();
+            logger.LogInformation($"应用启动，日志目录：{GetLogDirectory()}。");
 
-            var mainWindow2 = services.GetRequiredService<MainWindow>();
-            mainWindow2.Show();
+            try
+            {
+                services.GetRequiredService<IDatabaseInitializer>().Initialize();
+
+                var mainWindow = services.GetRequiredService<MainWindow>();
+                mainWindow.Show();
+            }
+            catch (Exception exception)
+            {
+                logger.LogError("应用启动失败。", exception);
+                throw;
+            }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            if (Services != null)
+            {
+                Services.GetService<IAppLogger>()?.LogInformation("应用退出。");
+            }
+
+            base.OnExit(e);
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -53,12 +74,22 @@ namespace ProductManagerApp
             services.AddTransient<IProductService, ProductService>();
             // 注册验证器
             services.AddTransient<ProductValidator>();
-            // 注册应用日志
-            services.AddSingleton<IAppLogger, DebugAppLogger>();
+            // 同时保留调试输出和按日文件日志。
+            services.AddSingleton<IAppLogger>(_ => new CompositeAppLogger(
+                new DebugAppLogger(),
+                new FileAppLogger(GetLogDirectory())));
             // 注册 ViewModel
             services.AddTransient<MainWindowViewModel>();
             // 注册 View
             services.AddTransient<MainWindow>();
+        }
+
+        private static string GetLogDirectory()
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "ProductManagerApp",
+                "Logs");
         }
     }
 }

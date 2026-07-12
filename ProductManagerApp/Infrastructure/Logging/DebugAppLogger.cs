@@ -17,14 +17,20 @@ namespace ProductManagerApp.Infrastructure.Logging
         public void LogError(string message, Exception exception)
         {
             ArgumentNullException.ThrowIfNull(exception);
-            Write("ERROR", message);
-            Debug.WriteLine(exception);
+            Write("ERROR", message, exception);
         }
 
-        private static void Write(string level, string message)
+        private static void Write(
+            string level,
+            string message,
+            Exception? exception = null)
         {
             Debug.WriteLine(
-                $"[{DateTimeOffset.Now:O}] [{level}] {message}");
+                LogEntryFormatter.Format(
+                    DateTimeOffset.Now,
+                    level,
+                    message,
+                    exception));
         }
     }
 }
