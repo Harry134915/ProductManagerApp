@@ -2,6 +2,9 @@
 
 namespace ProductManagerApp.Infrastructure.Commands
 {
+    /// <summary>
+    /// 将同步委托适配为 WPF ICommand，并支持显式刷新可执行状态。
+    /// </summary>
     public class RelayCommand : ICommand
     {
         private readonly Action<object?> _execute;

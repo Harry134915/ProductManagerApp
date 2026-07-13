@@ -2,6 +2,9 @@ using Dapper;
 
 namespace ProductManagerApp.DAL.Database
 {
+    /// <summary>
+    /// 在事务中确保商品表、编码触发器和唯一索引满足当前结构要求。
+    /// </summary>
     public class SqliteDatabaseInitializer : IDatabaseInitializer
     {
         private readonly IDbProvider _dbProvider;

@@ -4,6 +4,9 @@ using ProductManagerApp.DAL.Database;
 
 namespace ProductManagerApp.Tests.DAL;
 
+/// <summary>
+/// 验证初始化器兼容包含重复编码的旧数据库且不会破坏已有数据。
+/// </summary>
 [Collection(SqliteIntegrationCollection.Name)]
 public class SqliteDatabaseInitializerTests
 {

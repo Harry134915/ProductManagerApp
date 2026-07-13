@@ -2,6 +2,9 @@ using ProductManagerApp.Infrastructure.Input;
 
 namespace ProductManagerApp.Tests.Infrastructure.Input;
 
+/// <summary>
+/// 验证价格、库存以及粘贴文本的候选输入规则。
+/// </summary>
 public class NumericInputRulesTests
 {
     [Theory]

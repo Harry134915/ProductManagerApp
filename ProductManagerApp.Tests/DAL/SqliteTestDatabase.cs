@@ -4,6 +4,9 @@ using System.Data.SQLite;
 
 namespace ProductManagerApp.Tests.DAL;
 
+/// <summary>
+/// 为单个测试创建隔离的 SQLite 文件，并在释放时清理数据库及 sidecar 文件。
+/// </summary>
 internal sealed class SqliteTestDatabase : IDisposable
 {
     private bool _disposed;
@@ -43,6 +46,7 @@ internal sealed class SqliteTestDatabase : IDisposable
             return;
         }
 
+        // System.Data.SQLite 可能缓存原生句柄，先清池才能在 Windows 上稳定删除文件。
         SQLiteConnection.ClearAllPools();
         DeleteIfExists(DatabasePath);
         DeleteIfExists(DatabasePath + "-journal");

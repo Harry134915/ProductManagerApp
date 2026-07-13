@@ -7,6 +7,9 @@ using ProductManagerApp.DTO;
 
 namespace ProductManagerApp.BLL.Services
 {
+    /// <summary>
+    /// 执行商品业务校验、模型映射和 Repository 调用结果检查。
+    /// </summary>
     public class ProductService : IProductService
     {
         private readonly IProductRepository _repo;

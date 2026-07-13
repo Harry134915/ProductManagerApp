@@ -7,6 +7,9 @@ using ProductManagerApp.ViewModels;
 
 namespace ProductManagerApp.Tests.ViewModels;
 
+/// <summary>
+/// 验证主窗口对新增/编辑模式、命令协作、删除确认、取消和日志的编排。
+/// </summary>
 public class MainWindowViewModelTests
 {
     [Fact]

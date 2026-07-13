@@ -1,9 +1,7 @@
 ﻿namespace ProductManagerApp.DTO
 {
     /// <summary>
-    /// 商品创建数据传输对象（DTO）
-    /// 用于新增商品时在各层之间传递数据（如 UI → Service → DAL）
-    /// 仅承载数据，不包含任何业务逻辑或行为
+    /// 承载 ViewModel 提交给业务层的新增商品数据。
     /// </summary>
     public class ProductCreateDto
     {

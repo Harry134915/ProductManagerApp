@@ -2,6 +2,9 @@ using System.Diagnostics;
 
 namespace ProductManagerApp.Infrastructure.Logging
 {
+    /// <summary>
+    /// 将同一日志分发到多个实现，并隔离单个输出目标的故障。
+    /// </summary>
     public sealed class CompositeAppLogger : IAppLogger
     {
         private readonly IAppLogger[] _loggers;
@@ -53,6 +56,7 @@ namespace ProductManagerApp.Infrastructure.Logging
                 }
                 catch (Exception exception)
                 {
+                    // 一个日志目标失败后继续调用后续目标，避免丢失全部诊断信息。
                     Debug.WriteLine(
                         LogEntryFormatter.Format(
                             DateTimeOffset.Now,

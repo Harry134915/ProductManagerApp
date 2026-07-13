@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace ProductManagerApp.ViewModels
 {
+    /// <summary>
+    /// 保存待删除商品和确认条可见状态，不执行实际删除操作。
+    /// </summary>
     public class DeleteConfirmViewModel : INotifyPropertyChanged
     {
         public event Action? StateChanged;

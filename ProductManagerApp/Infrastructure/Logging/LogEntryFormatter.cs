@@ -2,6 +2,9 @@ using System.Globalization;
 
 namespace ProductManagerApp.Infrastructure.Logging
 {
+    /// <summary>
+    /// 统一调试和文件日志的时间戳、级别及异常文本格式。
+    /// </summary>
     internal static class LogEntryFormatter
     {
         public static string Format(

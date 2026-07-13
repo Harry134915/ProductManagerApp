@@ -6,6 +6,9 @@ using System.Data.SQLite;
 
 namespace ProductManagerApp.DAL
 {
+    /// <summary>
+    /// 使用 Dapper 执行商品 SQL，并将底层数据库错误包装为统一异常。
+    /// </summary>
     internal class ProductRepository : IProductRepository
     {
         private readonly IDbProvider _dbProvider;

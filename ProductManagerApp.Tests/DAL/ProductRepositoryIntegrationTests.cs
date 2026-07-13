@@ -4,6 +4,9 @@ using System.Data.SQLite;
 
 namespace ProductManagerApp.Tests.DAL;
 
+/// <summary>
+/// 在独立临时 SQLite 数据库上验证 ProductRepository 的真实 SQL 行为。
+/// </summary>
 [Collection(SqliteIntegrationCollection.Name)]
 public class ProductRepositoryIntegrationTests
 {

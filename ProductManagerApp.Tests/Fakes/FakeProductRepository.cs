@@ -3,6 +3,9 @@ using ProductManagerApp.Entity;
 
 namespace ProductManagerApp.Tests.Fakes;
 
+/// <summary>
+/// 以内存集合模拟 Repository，并记录调用参数和可配置的 affected rows。
+/// </summary>
 internal sealed class FakeProductRepository : IProductRepository
 {
     public List<Product> Products { get; } = new();

@@ -1,5 +1,8 @@
 namespace ProductManagerApp.BLL.Validators
 {
+    /// <summary>
+    /// 提供表单层和业务层共用的无状态商品校验规则及提示文案。
+    /// </summary>
     public static class ProductValidationRules
     {
         public const string CodeRequiredMessage = "请输入商品编码。";

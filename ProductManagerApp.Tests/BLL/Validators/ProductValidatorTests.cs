@@ -4,6 +4,9 @@ using ProductManagerApp.Infrastructure.Exceptions;
 
 namespace ProductManagerApp.Tests.BLL.Validators;
 
+/// <summary>
+/// 验证商品业务规则在合法输入和各类非法边界下的最终校验结果。
+/// </summary>
 public class ProductValidatorTests
 {
     private readonly ProductValidator _validator = new();

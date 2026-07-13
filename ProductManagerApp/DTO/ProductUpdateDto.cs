@@ -1,11 +1,7 @@
 ﻿namespace ProductManagerApp.DTO
 {
     /// <summary>
-    /// 商品更新数据传输对象（DTO）
-    /// 用于更新商品信息时在各层之间传递数据
-    /// 必须包含商品Id，用于定位需要更新的记录
-    /// 通常由 UI 或查询结果映射生成
-    /// 仅承载数据，不包含任何业务逻辑
+    /// 承载 ViewModel 提交给业务层的商品标识和可编辑字段。
     /// </summary>
     public class ProductUpdateDto
     {

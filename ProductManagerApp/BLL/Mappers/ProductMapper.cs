@@ -4,7 +4,7 @@ using ProductManagerApp.Entity;
 namespace ProductManagerApp.BLL.Mappers
 {
     /// <summary>
-    ///  DTO->Entity的翻译层（Mapper），也可以放在BLL.Services里，但为了职责单一，放在独立的Mapper类里
+    /// 在商品 DTO 与持久化 Entity 之间进行无业务逻辑的字段映射。
     /// </summary>
     public static class ProductMapper
     {
@@ -32,9 +32,6 @@ namespace ProductManagerApp.BLL.Mappers
             };
         }
 
-        /// <summary>
-        /// Entity -> DTO
-        /// </summary>
         public static ProductQueryDto ToQueryDto(Product product)
         {
             return new ProductQueryDto

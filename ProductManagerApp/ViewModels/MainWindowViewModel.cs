@@ -9,6 +9,9 @@ using System.Windows.Threading;
 
 namespace ProductManagerApp.ViewModels
 {
+    /// <summary>
+    /// 协调商品表单、列表、删除确认、异步命令以及全局用户反馈。
+    /// </summary>
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         private const string DatabaseErrorMessage = "数据库访问失败，请检查数据库文件或稍后重试。";
@@ -18,7 +21,7 @@ namespace ProductManagerApp.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
 
 
-        // 子 ViewModel
+        // 主窗口组合三个职责独立的子 ViewModel。
         public ProductListViewModel List { get; }
         public ProductFormViewModel Form { get; }
         public DeleteConfirmViewModel DeleteConfirm { get; }
@@ -84,7 +87,7 @@ namespace ProductManagerApp.ViewModels
             }
         }
 
-        // 命令还是在这里统一定义
+        // 跨子 ViewModel 的操作由主窗口命令统一编排。
         public AsyncRelayCommand AddCommand { get; }
         public AsyncRelayCommand UpdateCommand { get; }
         public RelayCommand DeleteCommand { get; }
@@ -166,7 +169,7 @@ namespace ProductManagerApp.ViewModels
             ConfirmDeleteCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
             RefreshCommand.PropertyChanged += OnAsyncCommandPropertyChanged;
 
-            //异步加载数据，避免界面卡顿
+            // 构造完成后立即启动首屏加载，但不阻塞窗口创建。
             _ = LoadInitialProducts();
         }
 
@@ -182,6 +185,7 @@ namespace ProductManagerApp.ViewModels
 
         private CancellationTokenSource BeginOperation()
         {
+            // 窗口一次只保留一个后台操作，新操作会使旧结果失效。
             CancelCurrentOperation();
             _cts = new CancellationTokenSource();
             return _cts;
@@ -189,6 +193,7 @@ namespace ProductManagerApp.ViewModels
 
         private void CompleteOperation(CancellationTokenSource operationCts)
         {
+            // 旧操作的 finally 不能释放后来创建的新操作令牌。
             if (!ReferenceEquals(_cts, operationCts))
             {
                 return;
@@ -373,7 +378,7 @@ namespace ProductManagerApp.ViewModels
 
             try
             {
-                //异步删除，避免界面卡顿
+                // Service 仍是同步接口，放到后台线程避免阻塞 WPF UI。
                 await Task.Run(() => _service.DeleteProduct(target.Id), token);
                 token.ThrowIfCancellationRequested();
                 StatusMessage = $"已删除商品：{target.Name}";

@@ -3,6 +3,9 @@ using ProductManagerApp.Infrastructure.Exceptions;
 
 namespace ProductManagerApp.BLL.Validators
 {
+    /// <summary>
+    /// 为绕过界面调用的业务入口提供商品最终校验。
+    /// </summary>
     public class ProductValidator
     {
         public void Validate(Product product)

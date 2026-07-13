@@ -7,6 +7,9 @@ using System.Runtime.CompilerServices;
 
 namespace ProductManagerApp.ViewModels
 {
+    /// <summary>
+    /// 管理商品列表的加载、搜索、选择恢复以及空白和错误状态。
+    /// </summary>
     public class ProductListViewModel : INotifyPropertyChanged
     {
         private const string DefaultLoadErrorMessage =
@@ -154,6 +157,7 @@ namespace ProductManagerApp.ViewModels
             string? loadingMessage = null)
         {
             var loadVersion = ++_loadVersion;
+            // 版本号用于丢弃较早请求的结果，避免旧数据覆盖新刷新结果。
             var selectedProductId = SelectedProduct?.Id;
             LoadingMessage = loadingMessage ?? GetDefaultLoadingMessage();
             LoadErrorMessage = null;

@@ -4,6 +4,9 @@ using ProductManagerApp.Entity;
 
 namespace ProductManagerApp.Tests.BLL.Mappers;
 
+/// <summary>
+/// 验证创建、更新和查询模型之间的映射不会遗漏或改变字段。
+/// </summary>
 public class ProductMapperTests
 {
     [Fact]

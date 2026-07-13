@@ -1,5 +1,8 @@
 namespace ProductManagerApp.Infrastructure.Input
 {
+    /// <summary>
+    /// 判断价格和库存的键盘或粘贴候选文本是否仍可形成合法数值。
+    /// </summary>
     public static class NumericInputRules
     {
         public static bool IsValidPriceCandidate(string? value)

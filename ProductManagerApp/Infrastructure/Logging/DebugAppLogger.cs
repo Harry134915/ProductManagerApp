@@ -2,6 +2,9 @@ using System.Diagnostics;
 
 namespace ProductManagerApp.Infrastructure.Logging
 {
+    /// <summary>
+    /// 将结构化级别和异常文本写入调试输出窗口。
+    /// </summary>
     public sealed class DebugAppLogger : IAppLogger
     {
         public void LogInformation(string message)

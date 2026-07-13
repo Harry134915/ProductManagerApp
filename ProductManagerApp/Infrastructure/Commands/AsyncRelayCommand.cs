@@ -3,6 +3,9 @@ using System.Windows.Input;
 
 namespace ProductManagerApp.Infrastructure.Commands
 {
+    /// <summary>
+    /// 在异步委托执行期间禁用自身，并公开执行状态供界面绑定。
+    /// </summary>
     public class AsyncRelayCommand : ICommand, INotifyPropertyChanged
     {
         private readonly Func<object?, Task> _execute;
@@ -24,6 +27,7 @@ namespace ProductManagerApp.Infrastructure.Commands
 
         public async void Execute(object? parameter)
         {
+            // ICommand 要求 void；内部 await 确保 finally 能可靠恢复执行状态。
             if (!CanExecute(parameter))
                 return;
 

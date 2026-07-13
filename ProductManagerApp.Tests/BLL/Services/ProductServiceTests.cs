@@ -7,6 +7,9 @@ using ProductManagerApp.Tests.Fakes;
 
 namespace ProductManagerApp.Tests.BLL.Services;
 
+/// <summary>
+/// 使用 Fake Repository 验证商品服务的校验、调用顺序和 affected rows 处理。
+/// </summary>
 public class ProductServiceTests
 {
     [Fact]

@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace ProductManagerApp.ViewModels
 {
+    /// <summary>
+    /// 管理商品表单值、字段级校验、DTO 创建和焦点请求。
+    /// </summary>
     public class ProductFormViewModel : INotifyPropertyChanged, INotifyDataErrorInfo
     {
         private static readonly string[] ValidatedProperties =
@@ -18,6 +21,7 @@ namespace ProductManagerApp.ViewModels
         };
 
         private readonly Dictionary<string, string> _errors = new();
+        // 只对已经交互或提交过的字段即时复检，避免首次打开表单就显示全部错误。
         private readonly HashSet<string> _validatedProperties = new();
 
         private string? _code;

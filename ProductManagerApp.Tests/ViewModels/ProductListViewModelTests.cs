@@ -4,6 +4,9 @@ using ProductManagerApp.ViewModels;
 
 namespace ProductManagerApp.Tests.ViewModels;
 
+/// <summary>
+/// 验证商品列表的加载状态、错误恢复、搜索过滤和选择恢复行为。
+/// </summary>
 public class ProductListViewModelTests
 {
     [Fact]

@@ -3,6 +3,9 @@ using ProductManagerApp.ViewModels;
 
 namespace ProductManagerApp.Tests.ViewModels;
 
+/// <summary>
+/// 验证商品表单的字段校验、焦点请求以及创建和更新 DTO 的转换行为。
+/// </summary>
 public class ProductFormViewModelTests
 {
     [Fact]

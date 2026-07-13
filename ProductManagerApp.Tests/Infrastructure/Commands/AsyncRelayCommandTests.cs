@@ -2,6 +2,9 @@ using ProductManagerApp.Infrastructure.Commands;
 
 namespace ProductManagerApp.Tests.Infrastructure.Commands;
 
+/// <summary>
+/// 验证异步命令执行期间的状态通知和防重复执行行为。
+/// </summary>
 public class AsyncRelayCommandTests
 {
     [Fact]

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace ProductManagerApp.Infrastructure.Logging
 {
+    /// <summary>
+    /// 以 UTF-8 格式将日志线程安全地追加到按日期划分的本地文件。
+    /// </summary>
     public sealed class FileAppLogger : IAppLogger
     {
         private const string FileNamePrefix = "ProductManagerApp-";
@@ -52,6 +55,7 @@ namespace ProductManagerApp.Infrastructure.Logging
             }
             catch (Exception writeException)
             {
+                // 日志属于诊断能力，文件系统故障不能反向中断业务操作。
                 Debug.WriteLine(
                     LogEntryFormatter.Format(
                         DateTimeOffset.Now,

@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace ProductManagerApp.Tests.Infrastructure.Logging;
 
+/// <summary>
+/// 验证文件日志格式、并发写入、写入失败降级和组合日志故障隔离。
+/// </summary>
 public class FileAppLoggerTests
 {
     [Fact]
