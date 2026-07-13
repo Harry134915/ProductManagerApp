@@ -68,6 +68,8 @@ ProductManagerApp
    │  ├─ Exceptions
    │  ├─ Input
    │  └─ Logging
+   ├─ Resources
+   │  └─ Styles
    ├─ ViewModels
    │  └─ Product
    └─ Views
@@ -96,6 +98,7 @@ graph LR
 - **BLL**：执行商品业务校验、DTO/Entity 映射、唯一性检查及 affected rows 判断。
 - **DAL**：管理连接、初始化数据库并执行参数化 SQL；将 SQLite/Dapper 异常包装为 `DataAccessException`。
 - **Infrastructure**：提供命令、输入规则、跨层异常和日志等通用能力。
+- **Resources**：集中维护语义颜色和全局输入框、按钮样式。
 - **App.xaml.cs**：作为组合根注册依赖、初始化数据库并创建主窗口。
 
 更详细的状态变化、CRUD 时序和异常边界见 [ProgramFlow/设计文档.md](ProgramFlow/设计文档.md)。
