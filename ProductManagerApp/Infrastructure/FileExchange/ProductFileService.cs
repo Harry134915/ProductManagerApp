@@ -131,7 +131,8 @@ namespace ProductManagerApp.Infrastructure.FileExchange
                         "CSV 行格式不正确。"))
             };
 
-            using var reader = new StreamReader(path, Encoding.UTF8, true);
+            using var snapshot = OpenReadSnapshot(path);
+            using var reader = new StreamReader(snapshot, Encoding.UTF8, true);
             using var csv = new CsvReader(reader, configuration);
             if (!csv.Read() || !csv.ReadHeader())
             {
@@ -163,7 +164,8 @@ namespace ProductManagerApp.Infrastructure.FileExchange
         private static ProductImportReadResult ReadXlsx(string path)
         {
             var result = new ProductImportReadResult();
-            using var workbook = new XLWorkbook(path);
+            using var snapshot = OpenReadSnapshot(path);
+            using var workbook = new XLWorkbook(snapshot);
             var worksheet = workbook.Worksheets.FirstOrDefault();
             if (worksheet == null)
             {
@@ -341,6 +343,22 @@ namespace ProductManagerApp.Infrastructure.FileExchange
                     "没有权限覆盖目标文件，请选择其他保存位置或检查文件权限。",
                     ex);
             }
+        }
+
+        private static MemoryStream OpenReadSnapshot(string path)
+        {
+            // 只读取磁盘上已经保存的版本，并允许 Excel/WPS 继续持有和编辑源文件。
+            using var source = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete,
+                bufferSize: 81920,
+                FileOptions.SequentialScan);
+            var snapshot = new MemoryStream();
+            source.CopyTo(snapshot);
+            snapshot.Position = 0;
+            return snapshot;
         }
 
         private static void WriteCsv(string path, IEnumerable<ProductCreateDto> rows)

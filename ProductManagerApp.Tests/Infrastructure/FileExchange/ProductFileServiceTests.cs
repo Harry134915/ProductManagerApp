@@ -232,6 +232,41 @@ public class ProductFileServiceTests
         }
     }
 
+    [Fact]
+    public void ReadImport_WhenSavedXlsxIsOpenWithSharing_ReadsSavedSnapshot()
+    {
+        var path = CreateTempPath(".xlsx");
+        try
+        {
+            _service.Export(path, ProductFileFormat.Xlsx, new[]
+            {
+                new ProductQueryDto
+                {
+                    Code = "P001",
+                    Name = "Phone",
+                    Price = 1999m,
+                    Stock = 10,
+                    Description = "Saved product"
+                }
+            });
+            using var openStream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.ReadWrite,
+                FileShare.ReadWrite | FileShare.Delete);
+
+            var result = _service.ReadImport(path, ProductFileFormat.Xlsx);
+
+            Assert.True(result.IsValid);
+            Assert.Equal("P001", Assert.Single(result.Records).Product.Code);
+            openStream.Dispose();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static string CreateTempPath(string extension)
     {
         return Path.Combine(Path.GetTempPath(), $"ProductFile-{Guid.NewGuid():N}{extension}");
