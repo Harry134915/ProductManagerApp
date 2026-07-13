@@ -108,7 +108,7 @@ graph LR
 AppContext.BaseDirectory/database.db
 ```
 
-启动时 `IDatabaseInitializer` 会在事务中确保 `products` 表、编码唯一性触发器和忽略大小写的唯一索引存在。
+启动时 `IDatabaseInitializer` 会读取 SQLite `PRAGMA user_version`，在事务中按顺序执行未完成迁移。当前数据库结构版本为 `1`，包含 `products` 表、编码唯一性触发器和忽略大小写的唯一索引。
 
 ```sql
 CREATE TABLE IF NOT EXISTS products (
@@ -125,7 +125,14 @@ CREATE TABLE IF NOT EXISTS products (
 
 - 查询和唯一约束均忽略大小写，`P001` 与 `p001` 被视为同一编码。
 - 新数据库会创建唯一索引 `ux_products_code_nocase`。
-- 如果旧数据库已经存在重复编码，初始化不会删除历史数据；触发器会先阻止继续新增重复编码。清理旧重复数据后，下次启动会补建唯一索引。
+- 如果旧数据库已经存在重复编码，初始化不会删除历史数据；触发器会先阻止继续新增重复编码，数据库版本暂时保持 `0`。清理旧重复数据后，下次启动会重试迁移、补建唯一索引并将版本推进到 `1`。
+
+迁移规则：
+
+- 迁移版本必须从 `1` 开始连续递增，不能跳过版本。
+- 结构变更与 `user_version` 更新位于同一事务，异常时整体回滚。
+- 已完成迁移不会重复执行，多次初始化结果一致。
+- 数据库版本高于当前应用支持版本时拒绝降级，避免旧程序破坏新结构。
 
 ## 业务规则
 
@@ -258,7 +265,7 @@ dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 - `FileAppLogger` 的日志格式、UTF-8 文件、并发写入和失败降级
 - `CompositeAppLogger` 的多目标转发和故障隔离
 - `ProductRepository` 在真实 SQLite 上的 CRUD、affected rows 和异常包装
-- `SqliteDatabaseInitializer` 对旧数据库重复编码的兼容处理
+- `SqliteDatabaseInitializer` 的版本推进、幂等、回滚、高版本拒绝和旧库兼容
 
 业务层和 ViewModel 测试主要使用手写 Fake 或 Stub。Repository 和数据库初始化集成测试会为每个场景创建独立的临时 SQLite 文件，测试完成后清理连接池、数据库及 sidecar 文件，不访问应用输出目录中的 `database.db`。
 
@@ -271,7 +278,7 @@ dotnet test ProductManagerApp.sln
 当前基线：
 
 ```text
-116 个测试通过，0 个失败
+121 个测试通过，0 个失败
 ```
 
 ## 当前设计约定
