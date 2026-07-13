@@ -1,14 +1,24 @@
 using ProductManagerApp.Infrastructure.Logging;
 using ProductManagerApp.Tests.Fakes;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace ProductManagerApp.Tests.Infrastructure.Logging;
 
 /// <summary>
-/// 验证文件日志格式、并发写入、写入失败降级和组合日志故障隔离。
+/// 验证文件日志格式、并发写入、过期清理、失败降级和组合日志故障隔离。
 /// </summary>
 public class FileAppLoggerTests
 {
+    private static readonly DateTimeOffset RetentionNow = new(
+        2026,
+        7,
+        13,
+        12,
+        0,
+        0,
+        TimeSpan.FromHours(8));
+
     [Fact]
     public void LogMethods_WriteDailyUtf8FileWithLevelsAndException()
     {
@@ -94,6 +104,152 @@ public class FileAppLoggerTests
     }
 
     [Fact]
+    public void RetentionCleanup_WhenNameAndLastWriteAreExpired_DeletesLog()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var expiredLog = CreateLogFile(
+            logDirectory,
+            RetentionNow.AddDays(-60),
+            RetentionNow.AddDays(-60));
+
+        try
+        {
+            FileLogRetentionCleaner.Cleanup(logDirectory, 30, RetentionNow);
+
+            Assert.False(File.Exists(expiredLog));
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RetentionCleanup_WhenOnlyOneAgeSignalIsExpired_PreservesLogs()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var oldNameWithRecentWrite = CreateLogFile(
+            logDirectory,
+            RetentionNow.AddDays(-60),
+            RetentionNow);
+        var recentNameWithOldWrite = CreateLogFile(
+            logDirectory,
+            RetentionNow.AddDays(-5),
+            RetentionNow.AddDays(-60));
+
+        try
+        {
+            FileLogRetentionCleaner.Cleanup(logDirectory, 30, RetentionNow);
+
+            Assert.True(File.Exists(oldNameWithRecentWrite));
+            Assert.True(File.Exists(recentNameWithOldWrite));
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RetentionCleanup_CurrentLog_PreservesFile()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var currentLog = CreateLogFile(
+            logDirectory,
+            RetentionNow,
+            RetentionNow.AddDays(-60));
+
+        try
+        {
+            FileLogRetentionCleaner.Cleanup(logDirectory, 30, RetentionNow);
+
+            Assert.True(File.Exists(currentLog));
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RetentionCleanup_UnknownAndNestedFiles_PreservesFiles()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var unknownFile = Path.Combine(logDirectory, "notes.log");
+        File.WriteAllText(unknownFile, "keep");
+        File.SetLastWriteTimeUtc(unknownFile, RetentionNow.AddDays(-60).UtcDateTime);
+
+        var nestedDirectory = Path.Combine(logDirectory, "archive");
+        Directory.CreateDirectory(nestedDirectory);
+        var nestedLog = CreateLogFile(
+            nestedDirectory,
+            RetentionNow.AddDays(-60),
+            RetentionNow.AddDays(-60));
+
+        try
+        {
+            FileLogRetentionCleaner.Cleanup(logDirectory, 30, RetentionNow);
+
+            Assert.True(File.Exists(unknownFile));
+            Assert.True(File.Exists(nestedLog));
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RetentionCleanup_WhenExpiredLogIsLocked_DoesNotThrow()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var expiredLog = CreateLogFile(
+            logDirectory,
+            RetentionNow.AddDays(-60),
+            RetentionNow.AddDays(-60));
+        FileStream? lockStream = null;
+
+        try
+        {
+            lockStream = new FileStream(
+                expiredLog,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.None);
+
+            var exception = Record.Exception(
+                () => FileLogRetentionCleaner.Cleanup(logDirectory, 30, RetentionNow));
+
+            Assert.Null(exception);
+            Assert.True(File.Exists(expiredLog));
+        }
+        finally
+        {
+            lockStream?.Dispose();
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Constructor_RemovesExpiredLogsAtLoggerStartup()
+    {
+        var logDirectory = CreateTemporaryDirectory();
+        var oldTimestamp = DateTimeOffset.Now.AddDays(-60);
+        var expiredLog = CreateLogFile(logDirectory, oldTimestamp, oldTimestamp);
+
+        try
+        {
+            _ = new FileAppLogger(logDirectory);
+
+            Assert.False(File.Exists(expiredLog));
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void CompositeLogger_WhenOneLoggerFails_ContinuesWithRemainingLogger()
     {
         var fakeLogger = new FakeAppLogger();
@@ -132,6 +288,19 @@ public class FileAppLoggerTests
             Path.GetTempPath(),
             $"ProductManagerApp-Logs-{Guid.NewGuid():N}");
         Directory.CreateDirectory(path);
+        return path;
+    }
+
+    private static string CreateLogFile(
+        string directory,
+        DateTimeOffset fileDate,
+        DateTimeOffset lastWrite)
+    {
+        var fileName = $"ProductManagerApp-" +
+            $"{fileDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}.log";
+        var path = Path.Combine(directory, fileName);
+        File.WriteAllText(path, "log");
+        File.SetLastWriteTimeUtc(path, lastWrite.UtcDateTime);
         return path;
     }
 

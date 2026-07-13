@@ -10,15 +10,26 @@ namespace ProductManagerApp.Infrastructure.Logging
     /// </summary>
     public sealed class FileAppLogger : IAppLogger
     {
+        public const int DefaultRetentionDays = 30;
+
         private const string FileNamePrefix = "ProductManagerApp-";
         private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(false);
         private readonly object _writeLock = new();
         private readonly string _logDirectory;
 
-        public FileAppLogger(string logDirectory)
+        public FileAppLogger(
+            string logDirectory,
+            int retentionDays = DefaultRetentionDays)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(logDirectory);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(retentionDays);
             _logDirectory = Path.GetFullPath(logDirectory);
+
+            // 应用中日志器是单例，因此清理只在启动构造阶段执行一次。
+            FileLogRetentionCleaner.Cleanup(
+                _logDirectory,
+                retentionDays,
+                DateTimeOffset.Now);
         }
 
         public void LogInformation(string message)

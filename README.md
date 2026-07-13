@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS products (
 C:\Users\<用户名>\AppData\Local\ProductManagerApp\Logs\ProductManagerApp-2026-07-12.log
 ```
 
-文件使用 UTF-8 编码并按日期分文件。直接运行 Debug 或 Release 程序都可以查看文件日志；日志目录或文件暂时不可写时，记录失败会降级到调试输出，不会中断商品操作。
+文件使用 UTF-8 编码并按日期分文件。应用启动时默认清理超过 `30` 天的日志；只有文件名日期和最后写入时间都过期时才会删除，并且不会扫描子目录或处理不符合命名规则的文件。直接运行 Debug 或 Release 程序都可以查看文件日志；日志目录、写入或清理暂时失败时会降级到调试输出，不会中断商品操作或应用启动。
 
 查看 Visual Studio 调试输出：
 
@@ -265,7 +265,7 @@ dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 - `ProductFormViewModel` 的字段校验、DTO 创建和焦点请求
 - `ProductListViewModel` 的加载、取消、错误、空状态、搜索和选择恢复
 - `MainWindowViewModel` 的模式切换、命令、删除确认、异常提示和日志
-- `FileAppLogger` 的日志格式、UTF-8 文件、并发写入和失败降级
+- `FileAppLogger` 的日志格式、UTF-8 文件、并发写入、30 天保留和失败降级
 - `CompositeAppLogger` 的多目标转发和故障隔离
 - `ProductRepository` 在真实 SQLite 上的 CRUD、affected rows 和异常包装
 - `SqliteDatabaseInitializer` 的版本推进、幂等、回滚、高版本拒绝和旧库兼容
@@ -281,7 +281,7 @@ dotnet test ProductManagerApp.sln
 当前基线：
 
 ```text
-121 个测试通过，0 个失败
+127 个测试通过，0 个失败
 ```
 
 ## 当前设计约定
