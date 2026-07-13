@@ -96,6 +96,8 @@
                         <ColumnDefinition Width="32"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Text="搜索商品" Foreground="#606266" FontSize="12"
@@ -127,7 +129,28 @@
                             Style="{StaticResource DefaultButton}"
                             Command="{Binding ClearSearchCommand}"/>
 
-                    <TextBlock Grid.Column="6" Text="{Binding ResultCountText}"
+                    <StackPanel Grid.Column="6" Orientation="Horizontal">
+                        <Button Content="导入" Width="68" Margin="0,0,8,0"
+                                TabIndex="2"
+                                ToolTip="从 CSV 或 XLSX 文件批量导入商品"
+                                Style="{StaticResource DefaultButton}"
+                                Command="{Binding DataContext.ImportCommand,
+                                    RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
+                        <Button Content="导出" Width="68" Margin="0,0,8,0"
+                                TabIndex="3"
+                                ToolTip="导出当前商品筛选结果"
+                                Style="{StaticResource DefaultButton}"
+                                Command="{Binding DataContext.ExportCommand,
+                                    RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
+                        <Button Content="下载模板" Width="88"
+                                TabIndex="4"
+                                ToolTip="下载 CSV 或 XLSX 商品导入模板"
+                                Style="{StaticResource DefaultButton}"
+                                Command="{Binding DataContext.DownloadTemplateCommand,
+                                    RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="8" Text="{Binding ResultCountText}"
                                AutomationProperties.LiveSetting="Polite"
                                Foreground="#909399" FontSize="12"
                                VerticalAlignment="Center"/>
@@ -136,7 +159,7 @@
 
             <Grid>
                 <DataGrid x:Name="ProductDataGrid"
-                          TabIndex="2"
+                          TabIndex="5"
                           ItemsSource="{Binding FilteredProducts}"
                           SelectedItem="{Binding SelectedProduct}"
                           PreviewKeyDown="OnProductDataGridPreviewKeyDown"

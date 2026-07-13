@@ -78,17 +78,6 @@
                            Foreground="#909399" FontSize="12" Margin="0,2,0,0"/>
             </StackPanel>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="导入" Width="72" Margin="0,0,8,0"
-                        Style="{StaticResource DefaultButton}"
-                        Command="{Binding ImportCommand}"/>
-                <Button Content="导出" Width="72" Margin="0,0,8,0"
-                        Style="{StaticResource DefaultButton}"
-                        Command="{Binding ExportCommand}"/>
-                <Button Content="下载模板" Width="92"
-                        Style="{StaticResource DefaultButton}"
-                        Command="{Binding DownloadTemplateCommand}"/>
-            </StackPanel>
         </Grid>
 
         <views:ProductFormView    Grid.Row="1" DataContext="{Binding Form}" />
