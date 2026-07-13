@@ -257,9 +257,10 @@ dotnet run --project ProductManagerApp\ProductManagerApp.csproj
 - `MainWindowViewModel` 的模式切换、命令、删除确认、异常提示和日志
 - `FileAppLogger` 的日志格式、UTF-8 文件、并发写入和失败降级
 - `CompositeAppLogger` 的多目标转发和故障隔离
+- `ProductRepository` 在真实 SQLite 上的 CRUD、affected rows 和异常包装
 - `SqliteDatabaseInitializer` 对旧数据库重复编码的兼容处理
 
-大部分测试使用手写 Fake 或 Stub，不依赖真实数据库。数据库初始化测试会创建临时 SQLite 文件，完成验证后自动清理。
+业务层和 ViewModel 测试主要使用手写 Fake 或 Stub。Repository 和数据库初始化集成测试会为每个场景创建独立的临时 SQLite 文件，测试完成后清理连接池、数据库及 sidecar 文件，不访问应用输出目录中的 `database.db`。
 
 运行全部测试：
 
@@ -270,7 +271,7 @@ dotnet test ProductManagerApp.sln
 当前基线：
 
 ```text
-108 个测试通过，0 个失败
+116 个测试通过，0 个失败
 ```
 
 ## 当前设计约定

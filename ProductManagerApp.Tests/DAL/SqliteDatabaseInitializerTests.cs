@@ -1,68 +1,50 @@
 using Dapper;
 using ProductManagerApp.DAL;
 using ProductManagerApp.DAL.Database;
-using System.Data.SQLite;
 
 namespace ProductManagerApp.Tests.DAL;
 
+[Collection(SqliteIntegrationCollection.Name)]
 public class SqliteDatabaseInitializerTests
 {
     [Fact]
     public void Initialize_WithLegacyDuplicates_PreservesDataAndBlocksNewDuplicates()
     {
-        var databasePath = Path.Combine(
-            Path.GetTempPath(),
-            $"ProductManagerApp-{Guid.NewGuid():N}.db");
-        var connectionString = new SQLiteConnectionStringBuilder
+        using var database = new SqliteTestDatabase(initialize: false);
+        var provider = database.Provider;
+
+        CreateLegacyDatabaseWithDuplicates(provider);
+
+        var initializer = new SqliteDatabaseInitializer(provider);
+        initializer.Initialize();
+
+        using (var connection = provider.CreateConnection())
         {
-            DataSource = databasePath,
-            Version = 3
-        }.ConnectionString;
-        var provider = new SqliteProvider(connectionString);
+            var existingCount = connection.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM products WHERE code = 'P001'");
+            Assert.Equal(2, existingCount);
 
-        try
-        {
-            CreateLegacyDatabaseWithDuplicates(provider);
-
-            var initializer = new SqliteDatabaseInitializer(provider);
-            initializer.Initialize();
-
-            using (var connection = provider.CreateConnection())
-            {
-                var existingCount = connection.ExecuteScalar<int>(
-                    "SELECT COUNT(*) FROM products WHERE code = 'P001'");
-                Assert.Equal(2, existingCount);
-
-                Assert.Throws<SQLiteException>(() => connection.Execute(@"
+            Assert.Throws<System.Data.SQLite.SQLiteException>(() => connection.Execute(@"
                     INSERT INTO products (code, name, price, stock, description)
                     VALUES ('p001', 'Duplicate', 10, 1, 'Duplicate code')
                 "));
 
-                connection.Execute(@"
+            connection.Execute(@"
                     DELETE FROM products
                     WHERE id = (SELECT MAX(id) FROM products WHERE code = 'P001')
                 ");
-            }
+        }
 
-            initializer.Initialize();
+        initializer.Initialize();
 
-            using var verificationConnection = provider.CreateConnection();
-            var uniqueIndexCount = verificationConnection.ExecuteScalar<int>(@"
+        using var verificationConnection = provider.CreateConnection();
+        var uniqueIndexCount = verificationConnection.ExecuteScalar<int>(@"
                 SELECT COUNT(*)
                 FROM sqlite_master
                 WHERE type = 'index'
                   AND name = 'ux_products_code_nocase'
             ");
-            Assert.Equal(1, uniqueIndexCount);
-        }
-        finally
-        {
-            SQLiteConnection.ClearAllPools();
-            if (File.Exists(databasePath))
-            {
-                File.Delete(databasePath);
-            }
-        }
+        Assert.Equal(1, uniqueIndexCount);
     }
 
     private static void CreateLegacyDatabaseWithDuplicates(IDbProvider provider)
