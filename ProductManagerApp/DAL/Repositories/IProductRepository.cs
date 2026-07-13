@@ -20,6 +20,11 @@ namespace ProductManagerApp.DAL
         // 新增
         int AddProduct(Product product);
 
+        /// <summary>
+        /// 在同一事务中新增整批商品，任一写入失败时不保留部分数据。
+        /// </summary>
+        int AddProducts(IReadOnlyCollection<Product> products);
+
         // 更新
         int UpdateProduct(Product product);
 

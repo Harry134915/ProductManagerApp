@@ -98,6 +98,74 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public void ImportProducts_WithValidBatch_CallsBatchRepositoryOnce()
+    {
+        var repo = new FakeProductRepository();
+        var service = CreateService(repo);
+        var products = new[]
+        {
+            CreateValidCreateDto(),
+            new ProductCreateDto
+            {
+                Code = "P002",
+                Name = "Tablet",
+                Price = 999m,
+                Stock = 5,
+                Description = "Tablet product"
+            }
+        };
+
+        var affected = service.ImportProducts(products);
+
+        Assert.Equal(2, affected);
+        Assert.Equal(1, repo.AddProductsCallCount);
+        Assert.Equal(2, repo.Products.Count);
+    }
+
+    [Fact]
+    public void ImportProducts_WithInvalidProduct_DoesNotCallBatchRepository()
+    {
+        var repo = new FakeProductRepository();
+        var service = CreateService(repo);
+        var product = CreateValidCreateDto();
+        product.Code = "中文编码";
+
+        Assert.Throws<ProductValidationException>(
+            () => service.ImportProducts(new[] { product }));
+
+        Assert.Equal(0, repo.AddProductsCallCount);
+    }
+
+    [Fact]
+    public void ImportProducts_WithDuplicateCodeInFile_DoesNotCallBatchRepository()
+    {
+        var repo = new FakeProductRepository();
+        var service = CreateService(repo);
+        var first = CreateValidCreateDto();
+        var second = CreateValidCreateDto();
+        second.Code = "p001";
+
+        Assert.Throws<ProductValidationException>(
+            () => service.ImportProducts(new[] { first, second }));
+
+        Assert.Equal(0, repo.AddProductsCallCount);
+    }
+
+    [Fact]
+    public void ImportProducts_WithExistingCode_DoesNotCallBatchRepository()
+    {
+        var repo = new FakeProductRepository();
+        repo.Products.Add(CreateExistingProduct());
+        var service = CreateService(repo);
+
+        Assert.Throws<ProductValidationException>(
+            () => service.ImportProducts(new[] { CreateValidCreateDto() }));
+
+        Assert.Equal(0, repo.AddProductsCallCount);
+        Assert.Single(repo.Products);
+    }
+
+    [Fact]
     public void UpdateProduct_WhenProductDoesNotExist_ThrowsValidationException()
     {
         var repo = new FakeProductRepository();

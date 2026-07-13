@@ -1,6 +1,6 @@
 # ProductManagerApp
 
-一个基于 **.NET 8、WPF、MVVM、Dapper 和 SQLite** 的商品管理桌面应用。项目支持商品新增、更新、删除、刷新、搜索和排序，并包含数据库自动初始化、字段级校验、异步操作状态、用户友好的异常提示及应用日志。
+一个基于 **.NET 8、WPF、MVVM、Dapper 和 SQLite** 的商品管理桌面应用。项目支持商品新增、更新、删除、刷新、搜索、排序以及 CSV/XLSX 批量导入导出，并包含数据库自动初始化、字段级校验、异步操作状态、用户友好的异常提示及应用日志。
 
 项目使用轻量分层结构：View 负责展示和输入，ViewModel 负责界面状态与操作编排，BLL 负责业务规则和映射，DAL 负责 SQLite 持久化。首次运行时会自动创建数据库结构，不需要手动准备 `database.db`。
 
@@ -14,11 +14,13 @@
 | 数据库 | SQLite |
 | 数据访问 | Dapper + System.Data.SQLite |
 | 依赖注入 | Microsoft.Extensions.DependencyInjection |
+| 文件交换 | CsvHelper + ClosedXML |
 | 测试框架 | xUnit |
 
 ## 功能特性
 
 - 商品新增、更新、删除和刷新
+- CSV/XLSX 批量导入、当前筛选结果导出和标准模板下载
 - 按商品编码或名称实时搜索
 - 商品表格按 ID、编码、名称、价格和库存排序
 - 新增与编辑模式清晰切换，编辑时商品编码只读
@@ -29,6 +31,7 @@
 - 加载、空列表、搜索无结果和加载失败状态
 - 异步命令执行期间自动禁用对应操作，防止重复点击
 - 非阻塞 Toast 状态提示和删除二次确认
+- 成功 Toast 约 2 秒、错误 Toast 约 5 秒后自动消失，新提示会重新计时
 - `F5` 刷新、`Esc` 退出编辑或取消删除、`Delete` 请求删除
 - 启动时自动创建数据库表、触发器和唯一索引
 - 业务异常、数据库异常和取消操作分级记录到调试输出与按日文件
@@ -66,6 +69,7 @@ ProductManagerApp
    ├─ Infrastructure
    │  ├─ Commands
    │  ├─ Exceptions
+   │  ├─ FileExchange
    │  ├─ Input
    │  └─ Logging
    ├─ Resources
@@ -186,9 +190,21 @@ CREATE TABLE IF NOT EXISTS products (
 - 搜索不会修改原始 `Products` 集合，清空搜索即可恢复全部结果。
 - 刷新会按商品 ID 尝试恢复当前选择；若商品已不存在或被搜索条件过滤，则退出编辑模式。
 
+### 批量导入与导出
+
+- “下载模板”可生成 CSV 或 XLSX 标准模板，固定列为：`商品编码、商品名称、价格、库存、描述`。
+- CSV 使用 UTF-8 BOM，支持带逗号、引号和换行的规范字段；XLSX 读取第一个工作表并以第一行为表头。
+- CSV 是纯文本格式，不能保存 Excel 列宽或样式；需要直接查看或打印时应选择 XLSX，XLSX 会保留表头、列宽、边框、数字格式和筛选样式。
+- 导入先解析全部数据，并复用商品业务规则检查字段、文件内重复编码和数据库已有编码。任一行存在问题时不会写入数据库，结果窗口会显示行号、字段和原因，并可另存 UTF-8 CSV 错误报告。
+- 全部数据通过预检后，Repository 在一个 SQLite 事务中写入整批商品；中途失败会整体回滚，不保留部分数据。
+- 导出不包含数据库 ID。有搜索条件时导出当前可见结果，无搜索条件时导出全部已加载商品，因此导出文件可直接作为导入文件使用。
+- CSV 与 XLSX 为正式支持格式，不支持旧版 `.xls`。
+- 覆盖已有文件前会先检测目标是否可写；如果文件仍在 Excel/WPS 中打开，需关闭文件后重试，程序不会截断或破坏原文件。
+- 导入文件被 Excel/WPS 独占时会明确提示关闭文件；只有成功读取后才会执行字段和重复编码预检，读取失败不会写入数据库。
+
 ## 异步与取消
 
-- 新增、更新、确认删除和刷新使用 `AsyncRelayCommand`。
+- 新增、更新、确认删除、刷新、导入、导出和模板下载使用 `AsyncRelayCommand`。
 - 命令通过 `IsExecuting` 在执行期间自动禁用自身，防止重复提交。
 - `MainWindowViewModel` 同一时间维护一个 `CancellationTokenSource`；新操作开始或窗口关闭时会取消并释放旧操作。
 - `ProductListViewModel` 使用加载版本号阻止过期结果覆盖新结果。
@@ -203,7 +219,7 @@ CREATE TABLE IF NOT EXISTS products (
 - `OperationCanceledException`：用户关闭窗口或新操作取消旧操作，静默处理。
 - 其他异常：记录后向用户显示通用提示。
 
-`IAppLogger` 将日志能力与 ViewModel 解耦。默认使用 `CompositeAppLogger` 同时写入 `DebugAppLogger` 和 `FileAppLogger`，日志级别包括 `INFO`、`WARN` 和 `ERROR`。日志只记录商品 ID、编码和列表数量，不记录价格、库存或描述。
+`IAppLogger` 将日志能力与 ViewModel 解耦。默认使用 `CompositeAppLogger` 同时写入 `DebugAppLogger` 和 `FileAppLogger`，日志级别包括 `INFO`、`WARN` 和 `ERROR`。商品文件操作只记录格式、数据行数、成功/失败数量和耗时；日志不记录价格、库存、描述或完整文件内容。
 
 文件日志位置：
 

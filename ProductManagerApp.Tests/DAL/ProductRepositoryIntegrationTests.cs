@@ -136,6 +136,22 @@ public class ProductRepositoryIntegrationTests
     }
 
     [Fact]
+    public void AddProducts_WhenLaterInsertFails_RollsBackEntireBatch()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = database.Repository;
+        var first = CreateProduct();
+        var duplicate = CreateProduct();
+        duplicate.Code = "p001";
+
+        var exception = Assert.Throws<DataAccessException>(
+            () => repository.AddProducts(new[] { first, duplicate }));
+
+        Assert.Contains("批量新增商品失败", exception.Message);
+        Assert.Empty(repository.GetAllProducts());
+    }
+
+    [Fact]
     public void GetAllProducts_WhenTableDoesNotExist_WrapsSqliteException()
     {
         using var database = new SqliteTestDatabase(initialize: false);

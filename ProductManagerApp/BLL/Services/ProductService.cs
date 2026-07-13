@@ -51,6 +51,52 @@ namespace ProductManagerApp.BLL.Services
             }
         }
 
+        public int ImportProducts(IReadOnlyCollection<ProductCreateDto> products)
+        {
+            ArgumentNullException.ThrowIfNull(products);
+
+            if (products.Count == 0)
+            {
+                throw new ProductValidationException("导入文件中没有可导入的商品数据。");
+            }
+
+            var entities = products.Select(ProductMapper.ToEntity).ToList();
+            foreach (var entity in entities)
+            {
+                _validator.Validate(entity);
+            }
+
+            var duplicateInFile = entities
+                .GroupBy(product => product.Code, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicateInFile != null)
+            {
+                throw new ProductValidationException(
+                    $"导入文件中商品编码“{duplicateInFile.Key}”重复。");
+            }
+
+            var existingCodes = _repo.GetAllProducts()
+                .Select(product => product.Code)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var existingCode = entities
+                .Select(product => product.Code)
+                .FirstOrDefault(existingCodes.Contains);
+            if (existingCode != null)
+            {
+                throw new ProductValidationException(
+                    $"商品编码“{existingCode}”已存在，不能重复导入。");
+            }
+
+            var affected = _repo.AddProducts(entities);
+            if (affected != entities.Count)
+            {
+                throw new ProductValidationException(
+                    "批量导入失败，写入数量与预期不一致。");
+            }
+
+            return affected;
+        }
+
         public void UpdateProduct(ProductUpdateDto dto)
         {
             ArgumentNullException.ThrowIfNull(dto);

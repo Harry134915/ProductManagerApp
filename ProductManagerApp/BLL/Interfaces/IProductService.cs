@@ -11,6 +11,11 @@ namespace ProductManagerApp.BLL.Interfaces
 
         void AddProduct(ProductCreateDto dto);
 
+        /// <summary>
+        /// 完整校验一批商品后，将其作为一个不可分割的批次写入数据库。
+        /// </summary>
+        int ImportProducts(IReadOnlyCollection<ProductCreateDto> products);
+
         void DeleteProduct(int productId);
 
         void UpdateProduct(ProductUpdateDto dto);

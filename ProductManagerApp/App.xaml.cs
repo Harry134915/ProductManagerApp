@@ -5,6 +5,7 @@ using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DAL;
 using ProductManagerApp.DAL.Database;
 using ProductManagerApp.Infrastructure.Logging;
+using ProductManagerApp.Infrastructure.FileExchange;
 using ProductManagerApp.ViewModels;
 using ProductManagerApp.Views;
 using System.Data.SQLite;
@@ -74,6 +75,10 @@ namespace ProductManagerApp
             services.AddTransient<IProductService, ProductService>();
             // 注册验证器
             services.AddTransient<ProductValidator>();
+            // 商品文件服务和系统对话框保持接口隔离，便于无 UI 单元测试。
+            services.AddSingleton<IProductFileService, ProductFileService>();
+            services.AddSingleton<IProductFileDialogService, ProductFileDialogService>();
+            services.AddTransient<IProductImportResultPresenter, ProductImportResultPresenter>();
             // 同时保留调试输出和按日文件日志。
             services.AddSingleton<IAppLogger>(_ => new CompositeAppLogger(
                 new DebugAppLogger(),

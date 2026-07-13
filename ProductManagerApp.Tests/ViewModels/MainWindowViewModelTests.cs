@@ -1,6 +1,7 @@
 using ProductManagerApp.BLL.Services;
 using ProductManagerApp.BLL.Validators;
 using ProductManagerApp.DTO;
+using ProductManagerApp.Entity;
 using ProductManagerApp.Infrastructure.Exceptions;
 using ProductManagerApp.Tests.Fakes;
 using ProductManagerApp.ViewModels;
@@ -405,7 +406,7 @@ public class MainWindowViewModelTests
             }
         };
         var logger = new FakeAppLogger();
-        var viewModel = new MainWindowViewModel(service, logger);
+        var viewModel = CreateViewModel(service, logger);
 
         try
         {
@@ -429,14 +430,131 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public async Task ImportCommand_WithPreflightErrors_ShowsResultAndDoesNotWriteRepository()
+    {
+        var repository = new FakeProductRepository();
+        var fileService = new FakeProductFileService();
+        fileService.ImportResult.TotalRows = 1;
+        fileService.ImportResult.Errors.Add(
+            new ProductManagerApp.Infrastructure.FileExchange.ProductImportError(
+                2, "价格", "价格必须是有效数字。"));
+        var dialogs = new FakeProductFileDialogService
+        {
+            ImportSelection = new ProductManagerApp.Infrastructure.FileExchange.FileDialogSelection(
+                "products.csv",
+                ProductManagerApp.Infrastructure.FileExchange.ProductFileFormat.Csv)
+        };
+        var presenter = new FakeProductImportResultPresenter();
+        var viewModel = CreateViewModel(repository, new FakeAppLogger(), fileService, dialogs, presenter);
+        await WaitUntilAsync(() => viewModel.List.HasLoaded);
+
+        viewModel.ImportCommand.Execute(null);
+        await WaitUntilAsync(() => !viewModel.ImportCommand.IsExecuting);
+
+        Assert.NotNull(presenter.LastErrors);
+        Assert.Equal(0, repository.AddProductsCallCount);
+    }
+
+    [Fact]
+    public async Task ImportCommand_WithValidFile_ImportsBatchAndRefreshesList()
+    {
+        var repository = new FakeProductRepository();
+        var fileService = new FakeProductFileService();
+        fileService.ImportResult.TotalRows = 1;
+        fileService.ImportResult.Records.Add(
+            new ProductManagerApp.Infrastructure.FileExchange.ProductImportRecord(
+                2,
+                new ProductCreateDto
+                {
+                    Code = "P002",
+                    Name = "Tablet",
+                    Price = 999m,
+                    Stock = 5,
+                    Description = "Tablet product"
+                }));
+        var dialogs = new FakeProductFileDialogService
+        {
+            ImportSelection = new ProductManagerApp.Infrastructure.FileExchange.FileDialogSelection(
+                "products.xlsx",
+                ProductManagerApp.Infrastructure.FileExchange.ProductFileFormat.Xlsx)
+        };
+        var viewModel = CreateViewModel(
+            repository,
+            new FakeAppLogger(),
+            fileService,
+            dialogs,
+            new FakeProductImportResultPresenter());
+        await WaitUntilAsync(() => viewModel.List.HasLoaded);
+
+        viewModel.ImportCommand.Execute(null);
+        await WaitUntilAsync(() => !viewModel.ImportCommand.IsExecuting);
+
+        Assert.Equal(1, repository.AddProductsCallCount);
+        Assert.Single(viewModel.List.Products);
+        Assert.Equal("成功导入 1 条商品", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task ExportCommand_ExportsCurrentFilteredProductsOnly()
+    {
+        var repository = new FakeProductRepository();
+        repository.Products.AddRange(new[]
+        {
+            new Product { Id = 1, Code = "P001", Name = "Phone", Price = 1m, Stock = 1, Description = "Phone" },
+            new Product { Id = 2, Code = "P002", Name = "Tablet", Price = 2m, Stock = 2, Description = "Tablet" }
+        });
+        var fileService = new FakeProductFileService();
+        var dialogs = new FakeProductFileDialogService
+        {
+            SaveSelection = new ProductManagerApp.Infrastructure.FileExchange.FileDialogSelection(
+                "products.csv",
+                ProductManagerApp.Infrastructure.FileExchange.ProductFileFormat.Csv)
+        };
+        var viewModel = CreateViewModel(
+            repository,
+            new FakeAppLogger(),
+            fileService,
+            dialogs,
+            new FakeProductImportResultPresenter());
+        await WaitUntilAsync(() => viewModel.List.HasLoaded);
+        viewModel.List.SearchText = "Tablet";
+
+        viewModel.ExportCommand.Execute(null);
+        await WaitUntilAsync(() => !viewModel.ExportCommand.IsExecuting);
+
+        var exported = Assert.Single(fileService.LastExportedProducts!);
+        Assert.Equal("P002", exported.Code);
+    }
+
     private static MainWindowViewModel CreateViewModel(
         FakeProductRepository? repository = null,
-        FakeAppLogger? logger = null)
+        FakeAppLogger? logger = null,
+        FakeProductFileService? fileService = null,
+        FakeProductFileDialogService? dialogs = null,
+        FakeProductImportResultPresenter? presenter = null)
     {
         repository ??= new FakeProductRepository();
         logger ??= new FakeAppLogger();
         var service = new ProductService(repository, new ProductValidator());
-        return new MainWindowViewModel(service, logger);
+        return new MainWindowViewModel(
+            service,
+            logger,
+            fileService ?? new FakeProductFileService(),
+            dialogs ?? new FakeProductFileDialogService(),
+            presenter ?? new FakeProductImportResultPresenter());
+    }
+
+    private static MainWindowViewModel CreateViewModel(
+        ProductManagerApp.BLL.Interfaces.IProductService service,
+        FakeAppLogger logger)
+    {
+        return new MainWindowViewModel(
+            service,
+            logger,
+            new FakeProductFileService(),
+            new FakeProductFileDialogService(),
+            new FakeProductImportResultPresenter());
     }
 
     private static ProductQueryDto CreateProduct()
@@ -469,6 +587,9 @@ public class MainWindowViewModelTests
         public List<ProductQueryDto> GetAllProducts() => GetAllProductsHandler();
 
         public void AddProduct(ProductCreateDto dto) => throw new NotSupportedException();
+
+        public int ImportProducts(IReadOnlyCollection<ProductCreateDto> products) =>
+            throw new NotSupportedException();
 
         public void DeleteProduct(int productId) => throw new NotSupportedException();
 

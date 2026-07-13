@@ -323,6 +323,9 @@ public class ProductListViewModelTests
 
         public void AddProduct(ProductCreateDto dto) => throw new NotSupportedException();
 
+        public int ImportProducts(IReadOnlyCollection<ProductCreateDto> products) =>
+            throw new NotSupportedException();
+
         public void DeleteProduct(int productId) => throw new NotSupportedException();
 
         public void UpdateProduct(ProductUpdateDto dto) => throw new NotSupportedException();

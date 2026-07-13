@@ -89,6 +89,45 @@ namespace ProductManagerApp.DAL
             }
         }
 
+        public int AddProducts(IReadOnlyCollection<Product> products)
+        {
+            const string sql = @"
+                INSERT INTO products (code, name, price, stock, description)
+                VALUES (@Code, @Name, @Price, @Stock, @Description)
+            ";
+
+            try
+            {
+                using var conn = _dbProvider.CreateConnection();
+                conn.Open();
+                using var transaction = conn.BeginTransaction();
+
+                try
+                {
+                    // Dapper 会为集合中的每个商品执行一次 INSERT，事务保证整批原子性。
+                    var affected = conn.Execute(sql, products, transaction);
+                    transaction.Commit();
+                    return affected;
+                }
+                catch
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch
+                    {
+                        // 保留真正的写入异常，避免回滚失败覆盖根因。
+                    }
+                    throw;
+                }
+            }
+            catch (Exception ex) when (IsDataAccessException(ex))
+            {
+                throw CreateDataAccessException("批量新增商品", ex);
+            }
+        }
+
         // 更新商品。商品编码不可修改，和界面中编码输入框选中商品后只读的规则保持一致。
         public int UpdateProduct(Product product)
         {
